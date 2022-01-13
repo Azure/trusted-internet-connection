@@ -6,17 +6,17 @@ There are a few tasks that must be performed before deploying your TIC 3.0 compl
 
 You must have the following before deployment:
 
-- [Resource group](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks#create-resource-group)
+- [Resource group](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#create-resource-group)
   - If you have appropriate permissions, you can create this during the deployment process.
 
-- [Register an enterprise application](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks#register-an-enterprise-application)
+- [Register an enterprise application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#register-an-enterprise-application)
   - This will be used to provide Reader Access to Log Analytics workspace (LAW).
-- [Create secret for enterprise application](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks#create-secret-for-enterprise-application)
+- [Create secret for enterprise application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#create-secret-for-enterprise-application)
 
 Though you can deploy all of the Azure resources, to actually send log data to a CISA CLAW to support the TIC 3.0 compliance you will need the following: 
 
-- [Request CISA provide S3 Bucket Access Key, Secret, and S3 Bucket Name](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks#request-claw-access)
-- [Collect Tenant ID](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks#collect-tenant-id)
+- [Request CISA provide S3 Bucket Access Key, Secret, and S3 Bucket Name](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#request-claw-access)
+- [Collect Tenant ID](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#collect-tenant-id)
 
 ### Create resource group
 
@@ -84,4 +84,4 @@ You will need your Tenant ID. Please safeguard this information.
 
 Now you are ready to deploy your solution. Return to the main Readme.
 
-[TIC 3.0 Solutions](https://github.com/MicrosoftDocs/Trusted-Internet-Connection)
+[TIC 3.0 Solutions](https://github.com/Azure/trusted-internet-connection#deploy-this-scenario)

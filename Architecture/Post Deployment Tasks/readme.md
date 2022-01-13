@@ -2,15 +2,15 @@
 
 The following needs to be performed, for all solutions, once deployment is complete. These are the tasks that an ARM template cannot perform and requires manual effort. 
 
-- [Add enterprise application with reader role to Log Analytics workspace (LAW)](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#add-reader-role)
-- [Send Azure AD logs to Log Analytics workspace](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)
+- [Add enterprise application with reader role to Log Analytics workspace (LAW)](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#add-reader-role)
+- **OPTIONAL** - [Send Azure AD logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)
   - Support the access/auth log control.
 
-- [Send NetFlow logs to Log Analytics workspace](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)
+- **OPTIONAL** - [Send NetFlow logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)
   - Supports NetFlow log control.
 
-- [Link schedule to runbook](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-schedule-to-runbook)
-- [Update Automation account variables with your unique values](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#update-automation-account-variables) 
+- [Link schedule to runbook](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-schedule-to-runbook)
+- [Update Automation account variables with your unique values](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#update-automation-account-variables) 
   - CISA provided CLAW S3 access key
   - CISA provided CLAW S3 access secret
   - Unique S3 bucket name
@@ -71,7 +71,7 @@ When proceeding through the steps in the following Guide, use the recently creat
 
 Once you setup Azure AD diagnostic settings, then you are ready to link a schedule to the Runbook so that it collects the logs and sends them to the CLAW.
 
-- Use the [Link additional schedules with parameters](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
+- Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter).
 
 ## Send NetFlow logs to Log Analytics workspace
 
@@ -81,20 +81,20 @@ This process is a little complicated but the following guide does a great job ou
 
 Once you setup NetFlow logs with Network Security Groups, then you are ready to link a schedule to the Runbook so that it collects the logs and sends them to the CLAW.
 
-- Use the [Link additional schedules with parameters](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
+- Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter).
 
 ## Link schedule to runbook
 
 The Runbook was created and published and the schedules were created with the ARM template; however, they need to be linked. The schedules are linked based on which logs to collect. Each schedule link will use a schedule and set a parameter to 'true'. 
 
 - If you deployed a new or used a pre-existing Azure Firewall.
-  - Use the [Default schedule Link](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#default-schedule-link)
+  - Use the [Default schedule Link](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#default-schedule-link)
 - If you are using a Third-party Firewall like a Palo Alto NVA or Cisco NVA .
-  - Use the [Link additional schedules with parameters](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
-- If you setup Azure AD to send logs to the LAW ([Send Azure AD logs to Log Analytics workspace](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send Azure AD logs to the CLAW.
-  - Use the [Link additional schedules with parameters](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
-- If you setup NetFlow to send logs to the LAW ([Send NetFlow logs to Log Analytics workspace](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send NetFlow logs to the CLAW.
-  - Use the [Link additional schedules with parameters](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
+  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
+- If you setup Azure AD to send logs to the LAW ([Send Azure AD logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send Azure AD logs to the CLAW.
+  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
+- If you setup NetFlow to send logs to the LAW ([Send NetFlow logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send NetFlow logs to the CLAW.
+  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
 
 NOTE: Each schedule should only collect the logs for a single purpose, though it is possible to set multiple parameters to 'true', running them together adds complexity and failure to collect one of the logs would cause remaining logs to fail too.
 
@@ -194,7 +194,7 @@ This example walks through updating the AWSAccessKey, repeat the steps for each 
 4. Select **Edit value**
 5. Enter the AWS Access Key provided to you by CISA
    1. Not all values are provided by CISA
-   2. Some values you will have collected during the [Prerequisite Tasks](https://github.com/MicrosoftDocs/Trusted-Internet-Connection/tree/main/Architecture/Prerequisite%20Tasks)
+   2. Some values you will have collected during the [Prerequisite Tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks)
 6. Select **Save**
 
 [Manage variables in Azure Automation | Microsoft Docs](https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell)
