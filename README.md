@@ -28,7 +28,7 @@ Architecture solutions are defined by three categories: Azure firewall and third
 
 ### Components
 
-#### Azure Firewall
+#### Firewall
 
 1. Firewall
    1. This can be a native Azure firewall or a third-party firewall appliance.
