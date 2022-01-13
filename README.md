@@ -12,6 +12,8 @@ Federal organizations and government agencies are the most likely use case for i
 - [EINSTEIN | CISA](https://www.cisa.gov/einstein)
 - [Managed Trusted Internet Protocol Service (MTIPS) | GSA](https://www.gsa.gov/technology/technology-products-services/it-security/trusted-internet-connections-tics)
 
+*Microsoft provides this information to Federal Civilian Executive Branch (FCEB) departments and agencies as part of a suggested configuration to facilitate participation in CISA’s CLAW capability. This suggested configuration is maintained by Microsoft and is subject to change.*
+
 ### Supported CLAW Destinations
 
 CISA's initial CLAW destination leverages Amazon S3 as the storage mechanism. As such, this solution supports S3. When CISA deploys CLAW support running in Azure, this solution will update to send logs to Azure-based CLAW.
