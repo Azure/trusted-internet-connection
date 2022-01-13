@@ -1,0 +1,355 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworksName": {
+            "defaultValue": "VNET-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This VNET will be created during deployment."
+            }
+        },
+        "virtualNetworksIPRange": {
+            "defaultValue": "192.168.0.0/24",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
+            }
+        },
+        "subnetFirewallName": {
+            "defaultValue": "AzureFirewallSubnet",
+            "type": "String",
+            "allowedValues": [
+                "AzureFirewallSubnet"
+                ],
+            "metadata": {
+                "description": "This is the subnet for the Azure Firewall. Its name is fixed."
+            }
+        },
+        "subnetFirewallIPRange": {
+            "defaultValue": "192.168.0.0/26",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range of the Azure Firewall subnet."
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "saeastdmz",
+            "type": "String",
+            "metadata": {
+                "description": "This is the storage account for the resources."
+            }
+        },
+        "azureFirewallName": {
+            "defaultValue": "FW-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Azure Firewall name."
+            }
+        },
+        "azureFirewallNameResourceGroup": {
+            "defaultValue": "[resourceGroup().name]",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group where your Azure Firewall is located."
+            }
+        },
+        "azureFirewallPoliciesName": {
+            "defaultValue": "FWP-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Azure Firewall Policy name."
+            }
+        },
+        "publicIPAzureFirewallName": {
+            "defaultValue": "PIP-FW-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the public IP address name for the Firewall."
+            }
+        },
+        "logAnalyticsWorkspaceName": {
+            "defaultValue": "law-dmz",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Log Analytics Workspace name. This is where the Firewall logs will be sent."
+            }
+        },
+        "logAnalyticsResourceGroupName": {
+            "defaultValue": "ResourceGroupNameofLogAnalytics",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group Name where your Log Analytics Workspace located."
+            }
+        },
+        "automationAccountName": {
+            "defaultValue": "AA-UploadLogsToCLAW",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
+            }
+        },
+        "scheduleName": {
+            "defaultValue": "HourlyUploadsToCLAW",
+            "type": "String",
+            "metadata": {
+                "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
+            }
+        },
+        "baseTime": { 
+            "type": "string", 
+            "defaultValue": "[utcNow('u')]",
+            "metadata": {
+                "description": "Schedule will start one hour from this time."
+            }
+        },
+        "runbookName": {
+            "defaultValue": "UploadsToCLAWS3",
+            "type": "String",
+            "metadata": {
+                "description": "This is the automation account runbook name. The runbook is pulled from github and published as this name."
+            }
+        },
+        "runbookUri": {
+            "defaultValue": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/Runbook/UploadToCLAW-S3.ps1",
+            "type": "String",
+            "metadata": {
+                "description": "DO NOT CHANGE, unless you know what you are doing. This is the github location of the runbook."
+            }
+        },
+        "diagSettingsName": {
+            "defaultValue": "SendToWorkspace",
+            "type": "String",
+            "metadata": {
+                "description": "This is the diagnostic settings in the Firewall that will send logs to the Log Analytics Workspace."
+            }
+        },
+        "actionGroupName": {
+            "defaultValue": "FailureEmail",
+            "type": "string",
+            "maxLength": 12,
+            "metadata": {
+                "description": "This is the action group in Azure Alert that will email you if the runbook fails to send logs to the CLAW."
+            }
+        },
+        "failedRunbookAlertEmail": {
+            "defaultValue": "first.last@mail.com",
+            "type": "string",
+            "metadata": {
+                "description": "This is the email(s) that will receive the failure notification. Seperate with comma."
+            }
+        }
+    },
+    "variables": {
+     },
+    "resources": [
+        {
+            "type": "Microsoft.Network/azureFirewalls",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('azureFirewallName')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetFirewallName'))]",
+                "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "AZFW_VNet",
+                    "tier": "Premium"
+                },
+                "threatIntelMode": "Alert",
+                "additionalProperties": {},
+                "ipConfigurations": [
+                    {
+                        "name": "[concat('PIP-', parameters('azureFirewallName'))]",
+                        "properties": {
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetFirewallName'))]"
+                            }
+                        }
+                    }
+                ],
+                "networkRuleCollections": [],
+                "applicationRuleCollections": [],
+                "natRuleCollections": [],
+                "firewallPolicy": {
+                    "id": "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/firewallPolicies",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('azureFirewallPoliciesName')]",
+            "location": "eastus",
+            "properties": {
+                "sku": {
+                    "tier": "Premium"
+                },
+                "threatIntelMode": "Alert",
+                "intrusionDetection": {
+                    "mode": "Alert"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]"
+            ],
+            "properties": {
+                "priority": 200,
+                "ruleCollections": [
+                    {
+                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+                        "action": {
+                            "type": "Allow"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NetworkRule",
+                                "name": "AllTraffic",
+                                "ipProtocols": [
+                                    "Any"
+                                ],
+                                "sourceAddresses": [
+                                    "[parameters('virtualNetworksIPRange')]"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "*"
+                                ],
+                                "destinationIpGroups": [],
+                                "destinationFqdns": [],
+                                "destinationPorts": [
+                                    "*"
+                                ]
+                            }
+                        ],
+                        "name": "DefaultNetworkRule",
+                        "priority": 150
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('virtualNetworksName')]",
+            "location": "eastus",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[parameters('virtualNetworksIPRange')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetFirewallName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetFirewallIPRange')]",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Enabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        }
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetFirewallName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('subnetFirewallIPRange')]",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('publicIPAzureFirewallName')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "LinkedTemplate-LogAnalyticsandAutomationAccount",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/azureFirewalls', parameters('azureFirewallName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/TIC%203.0%20DMZ%20Architecture/Azure%20Firewall/Log%20Analytics%20and%20Automation%20Account/azuredeploy.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "azureFirewallName": {
+                        "value": "[parameters('azureFirewallName')]"
+                    },
+                    "azureFirewallNameResourceGroup": {
+                        "value": "[parameters('azureFirewallNameResourceGroup')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccountName')]"
+                    },
+                    "logAnalyticsWorkspaceName": {
+                        "value": "[parameters('logAnalyticsWorkspaceName')]"
+                    },
+                    "logAnalyticsResourceGroupName": {
+                        "value": "[parameters('logAnalyticsResourceGroupName')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "scheduleName": {
+                        "value": "[parameters('scheduleName')]"
+                    },
+                    "baseTime": { 
+                        "value": "[parameters('baseTime')]"
+                    },
+                    "runbookName": {
+                        "value": "[parameters('runbookName')]"
+                    },
+                    "runbookUri": {
+                        "value": "[parameters('runbookUri')]"
+                    },
+                    "diagSettingsName": {
+                        "value": "[parameters('diagSettingsName')]"
+                    },
+                    "actionGroupName": {
+                        "value": "[parameters('actionGroupName')]"
+                    },
+                    "failedRunbookAlertEmail": {
+                        "value": "[parameters('failedRunbookAlertEmail')]"
+                    }
+                }   
+            }
+        }
+    ]
+}

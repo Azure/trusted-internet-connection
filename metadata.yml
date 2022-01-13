@@ -1,0 +1,24 @@
+### YamlMime:Architecture
+metadata:
+  title: Trusted Internet Connection 3.0 compliance for internet facing applications 
+  titleSuffix: Azure Example Scenarios
+  description: Deliver TIC 3.0 compliance and improve end user experience with your internet facing Azure applications and services.
+  author: paullizer
+  ms.author: paullizer
+  ms.date: 12/08/2021
+  ms.topic: Trusted Internet Connection 3.0
+  ms.service: architecture-center
+  ms.subservice: azure-guide
+azureCategories:
+  - networking
+products:
+  - azure
+  - azure-automation
+  - azure-log-analytics
+  - azure-firewall
+  - azure-active-directory
+name: Trusted Internet Connection 3.0 compliance for internet facing applications 
+summary: Deliver TIC 3.0 compliance and improve end user experience with your internet facing Azure applications and services.
+thumbnailUrl: /azure/architecture/browse/thumbs/deliver-gov-compliance-logs-architecture-thumbnail.png
+content: |
+  [!include[](deliver-gov-compliance-logs-content.md)]

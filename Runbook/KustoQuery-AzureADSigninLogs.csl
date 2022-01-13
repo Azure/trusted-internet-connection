@@ -1,0 +1,9 @@
+SigninLogs 
+    | where TimeGenerated > ago(60m) 
+    | project 
+        UserDisplayName,
+        Identity,
+        UserPrincipalName,
+        AppDisplayName,
+        AppId,
+        ResourceDisplayName

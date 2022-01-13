@@ -1,0 +1,529 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualNetworksName": {
+            "defaultValue": "VNET-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This VNET will be created during deployment."
+            }
+        },
+        "virtualNetworksIPRange": {
+            "defaultValue": "192.168.0.0/24",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
+            }
+        },
+        "subnetFirewallName": {
+            "defaultValue": "AzureFirewallSubnet",
+            "type": "String",
+            "allowedValues": [
+                "AzureFirewallSubnet"
+                ],
+            "metadata": {
+                "description": "This is the subnet for the Azure Firewall. Its name is fixed."
+            }
+        },
+        "subnetFirewallIPRange": {
+            "defaultValue": "192.168.0.0/26",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range of the Azure Firewall subnet."
+            }
+        },
+        "subnetServerName": {
+            "defaultValue": "ServerSubnet",
+            "type": "String",
+            "metadata": {
+                "description": "This is the subnet for the test server used to generate internet-bound traffic."
+            }
+        },
+        "subnetServerIPRange": {
+            "defaultValue": "192.168.0.64/26",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range of the Server subnet."
+            }
+        },
+        "routeTableName": {
+            "defaultValue": "RT-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the route table used to route Server subnet traffic to Azure Firewall."
+            }
+        },
+        "storageAccountName": {
+            "defaultValue": "saeastdmz",
+            "type": "String",
+            "metadata": {
+                "description": "This is the storage account for the resources."
+            }
+        },
+        "azureFirewallName": {
+            "defaultValue": "FW-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Azure Firewall name."
+            }
+        },
+        "azureFirewallNameResourceGroup": {
+            "defaultValue": "[resourceGroup().name]",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group where your Azure Firewall is located."
+            }
+        },
+        "azureFirewallIPAddress": {
+            "defaultValue": "192.168.0.4",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Azure Firewall IP Address. If you changed the AzureFirewallSubnet range, you must change this so its a member of the same range."
+            }
+        },
+        "azureFirewallPoliciesName": {
+            "defaultValue": "FWP-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Azure Firewall Policy name."
+            }
+        },
+        "publicIPAzureFirewallName": {
+            "defaultValue": "PIP-FW-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the public IP address name for the Firewall."
+            }
+        },
+        "logAnalyticsWorkspaceName": {
+            "defaultValue": "law-dmz",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Log Analytics Workspace name. This is where the Firewall logs will be sent."
+            }
+        },
+        "logAnalyticsResourceGroupName": {
+            "defaultValue": "ResourceGroupNameofLogAnalytics",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group Name where your Log Analytics Workspace located."
+            }
+        },
+        "virtualMachineName": {
+            "defaultValue": "VM-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the test server's VM name."
+            }
+        },
+        "networkInterfaceName": {
+            "defaultValue": "ni-vm-east-dmz",
+            "type": "String",
+            "metadata": {
+                "description": "This is the name for the test server's NIC."
+            }
+        },
+        "networkInterfaceIPaddress": {
+            "defaultValue": "192.168.0.68",
+            "type": "String",
+            "metadata": {
+                "description": "This is the internal IP address for the test server."
+            }
+        },
+        "publicIPVMName": {
+            "defaultValue": "PIP-VM-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the public IP address name for the test server."
+            }
+        },
+        "remoteIPAddressRDPToVM": {
+            "defaultValue": "173.66.214.116",
+            "type": "String",
+            "metadata": {
+                "description": "This is your Public IP address or Range. This will allow you to RDP to the test server."
+            }
+        },
+        "networkSecurityGroupName": {
+            "defaultValue": "NSG-VM-East-DMZ",
+            "type": "String",
+            "metadata": {
+                "description": "This is the network security group name."
+            }
+        },
+        "automationAccountName": {
+            "defaultValue": "AA-UploadLogsToCLAW",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
+            }
+        },
+        "scheduleName": {
+            "defaultValue": "HourlyUploadsToCLAW",
+            "type": "String",
+            "metadata": {
+                "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
+            }
+        },
+        "baseTime": { 
+            "type": "string", 
+            "defaultValue": "[utcNow('u')]",
+            "metadata": {
+                "description": "Schedule will start one hour from this time."
+            }
+        },
+        "runbookName": {
+            "defaultValue": "UploadsToCLAWS3",
+            "type": "String",
+            "metadata": {
+                "description": "This is the automation account runbook name. The runbook is pulled from github and published as this name."
+            }
+        },
+        "runbookUri": {
+            "defaultValue": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/Runbook/UploadToCLAW-S3.ps1",
+            "type": "String",
+            "metadata": {
+                "description": "DO NOT CHANGE, unless you know what you are doing. This is the github location of the runbook."
+            }
+        },
+        "diagSettingsName": {
+            "defaultValue": "SendToWorkspace",
+            "type": "String",
+            "metadata": {
+                "description": "This is the diagnostic settings in the Firewall that will send logs to the Log Analytics Workspace."
+            }
+        },
+        "actionGroupName": {
+            "defaultValue": "FailureEmail",
+            "type": "string",
+            "maxLength": 12,
+            "metadata": {
+                "description": "This is the action group in Azure Alert that will email you if the runbook fails to send logs to the CLAW."
+            }
+        },
+        "failedRunbookAlertEmail": {
+            "defaultValue": "first.last@mail.com",
+            "type": "string",
+            "metadata": {
+                "description": "This is the email(s) that will receive the failure notification. Seperate with comma."
+            }
+        },
+        "adminUsername": {
+            "defaultValue": "retroAdmin",
+            "type": "string",
+            "metadata": {
+                "description": "This is admin name for the test server."
+            }
+        },
+        "adminPassword": {
+            "type": "secureString",
+            "metadata": {
+                "description": "This is the admin password for the test server."
+            }
+        }
+    },
+    "variables": {
+     },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkSecurityGroupName')]",
+            "location": "eastus",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "RDP",
+                        "properties": {
+                            "protocol": "TCP",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "[parameters('remoteIPAddressRDPToVM')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 300,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('networkSecurityGroupName'), '/RDP')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "protocol": "TCP",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "[parameters('remoteIPAddressRDPToVM')]", 
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 300,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('publicIPVMName')]",
+            "location": "eastus",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "zones": [
+                "2"
+            ],
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('routeTableName')]",
+            "location": "eastus",
+            "properties": {
+                "disableBgpRoutePropagation": false,
+                "routes": [
+                    {
+                        "name": "Internet",
+                        "properties": {
+                            "addressPrefix": "0.0.0.0/0",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "[parameters('azureFirewallIPAddress')]",
+                            "hasBgpOverride": false
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('routeTableName'), '/Internet')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "0.0.0.0/0",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "[parameters('azureFirewallIPAddress')]",
+                "hasBgpOverride": false
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2021-07-01",
+            "name": "[parameters('virtualMachineName')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+            ],
+            "zones": [
+                "2"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2s_v5"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('virtualMachineName'), '_OsDisk_1_',parameters('virtualMachineName'))]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                        },
+                        "deleteOption": "Detach",
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('virtualMachineName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
+                        }
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true
+                    }
+                },
+                "licenseType": "Windows_Server"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "name": "[parameters('networkInterfaceName')]",
+            "location": "eastus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPVMName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetServerName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAddress": "[parameters('networkInterfaceIPaddress')]",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPVMName'))]"
+                            },
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetServerName'))]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": true,
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetServerName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[parameters('subnetServerIPRange')]",
+                "routeTable": {
+                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
+                },
+                "serviceEndpoints": [],
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "LinkedTemplate-NetworkLogAnalyticsandAutomationAccount",
+            "dependsOn": [],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/TIC%203.0%20DMZ%20Architecture/Azure%20Firewall/Network%20with%20Log%20Analytics%20and%20Automation/azuredeploy.json",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "azureFirewallName": {
+                        "value": "[parameters('azureFirewallName')]"
+                    },
+                    "azureFirewallNameResourceGroup": {
+                        "value": "[parameters('azureFirewallNameResourceGroup')]"
+                    },
+                    "azureFirewallPoliciesName": {
+                        "value": "[parameters('azureFirewallPoliciesName')]"
+                    },
+                    "publicIPAzureFirewallName": {
+                        "value": "[parameters('publicIPAzureFirewallName')]"
+                    },
+                    "virtualNetworksName": {
+                        "value": "[parameters('virtualNetworksName')]"
+                    },
+                    "virtualNetworksIPRange": {
+                        "value": "[parameters('virtualNetworksIPRange')]"
+                    },
+                    "subnetFirewallIPRange": {
+                        "value": "[parameters('subnetFirewallIPRange')]"
+                    },
+                    "subnetFirewallName": {
+                        "value": "[parameters('subnetFirewallName')]"
+                    },
+                    "storageAccountName": {
+                        "value": "[parameters('storageAccountName')]"
+                    },
+                    "logAnalyticsWorkspaceName": {
+                        "value": "[parameters('logAnalyticsWorkspaceName')]"
+                    },
+                    "logAnalyticsResourceGroupName": {
+                        "value": "[parameters('logAnalyticsResourceGroupName')]"
+                    },
+                    "automationAccountName": {
+                        "value": "[parameters('automationAccountName')]"
+                    },
+                    "scheduleName": {
+                        "value": "[parameters('scheduleName')]"
+                    },
+                    "baseTime": { 
+                        "value": "[parameters('baseTime')]"
+                    },
+                    "runbookName": {
+                        "value": "[parameters('runbookName')]"
+                    },
+                    "runbookUri": {
+                        "value": "[parameters('runbookUri')]"
+                    },
+                    "diagSettingsName": {
+                        "value": "[parameters('diagSettingsName')]"
+                    },
+                    "actionGroupName": {
+                        "value": "[parameters('actionGroupName')]"
+                    },
+                    "failedRunbookAlertEmail": {
+                        "value": "[parameters('failedRunbookAlertEmail')]"
+                    }
+                }   
+            }
+        }
+    ]
+}

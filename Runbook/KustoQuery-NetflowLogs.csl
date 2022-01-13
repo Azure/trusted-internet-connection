@@ -1,0 +1,23 @@
+AzureNetworkAnalytics_CL
+    | where SubType_s == 'FlowLog'
+        and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
+    | where TimeGenerated > ago(60m) 
+    | extend VMFields  = split(VM1_s, '/')
+    | extend VMName  = tostring(VMFields[1]) 
+    | project
+        TimeProcessed_t,
+        SrcIP_s,
+        VMName,
+        FlowDirection_s,
+        L4Protocol_s,
+        L7Protocol_s,
+        DestPort_d,
+        FlowType_s,
+        AllowedOutFlows_d,
+        DeniedOutFlows_d,
+        OutboundBytes_d,
+        InboundBytes_d,
+        OutboundPackets_d,
+        InboundPackets_d,
+        AzureRegion_s,
+        Region1_s
