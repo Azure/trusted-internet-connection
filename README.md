@@ -64,9 +64,9 @@ Deciding which architecture and resources to deploy, depends on what architectur
 ### Firewalls
 
 - If the organization wants to test using an Automation account, then deploy the [Complete](#complete) solution to a test/dev environment.
-- If the organization has an application in Azure that is routed back on-premises and have not deployed a firewall in Azure, then deploy the [Network + Log Analytics + Automation](https://github.com/Azure/trusted-internet-connection#network--log-analytics--automation-account).
-- If the organization has an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises, then deploy the [Log Analytics + Automation account](https://github.com/Azure/trusted-internet-connection#log-analytics--automation-account).
-- If the organization is using a Log Analytics workspace, along with an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises [Automation account only](https://github.com/Azure/trusted-internet-connection#automation-account-only).
+- If the organization has an application in Azure that is routed back on-premises and have not deployed a firewall in Azure, then deploy the [Network + Log Analytics + Automation](#network--log-analytics--automation-account).
+- If the organization has an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises, then deploy the [Log Analytics + Automation account](#log-analytics--automation-account).
+- If the organization is using a Log Analytics workspace, along with an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises [Automation account only](#automation-account-only).
 
 ## Deploy this scenario
 
@@ -120,14 +120,14 @@ An Azure alert is deployed and configured to send an failure email notification,
 
 The following solutions leverage the native Azure Firewall for inbound traffic management into your Azure application environment. Select your solution based on the maturity of your Azure environment. Organizations with an Azure Firewall and Log Analytics workspace should use Automation account Only solution.
 
-1. [Complete](https://github.com/Azure/trusted-internet-connection#complete)
+1. [Complete](#complete)
    1. Includes all resources and a virtual machine to generate internet-bound traffic.
-2. [Network + Log Analytics + Automation](https://github.com/Azure/trusted-internet-connection#network--log-analytics--automation-account)
+2. [Network + Log Analytics + Automation](#network--log-analytics--automation-account)
    1. This includes all Azure resources for the network, logging, automation, and alerting. Does NOT include a virtual machine.
 
-3. [Log Analytics + Automation account](https://github.com/Azure/trusted-internet-connection#log-analytics--automation-account)
+3. [Log Analytics + Automation account](#log-analytics--automation-account)
    1. This is good if you already have VNETs, firewalls, and route table/route server. Includes alerting.
-4. [Automation account only](https://github.com/Azure/trusted-internet-connection#automation-account-only)
+4. [Automation account only](#automation-account-only)
    1. This is good if you already have networks and are using a centralized Log Analytics workspace. Includes alerting.
 
 #### Complete
