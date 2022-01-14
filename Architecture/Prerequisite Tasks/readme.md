@@ -30,9 +30,9 @@ You can create the resource group during the deployment process too.
 
 You will need to register an enterprise application, this provides the authorization and access mechanism for the runbook to connect to the Log Analytics workspace to perform the necessary queries. It is suggested that you create a new application for the purpose of this effort. While you can use an existing application, each one should fulfil only a single purpose. It is useful to name the application based on its purpose. This example will use the name "UploadToCLAW" as the application name.
 
-![App registration](https://user-images.githubusercontent.com/34814295/145053553-92a21faf-01c7-43e0-8d79-5d2023ca0715.PNG)
+![App registration](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053553-92a21faf-01c7-43e0-8d79-5d2023ca0715.PNG)
 
-![Register an application](https://user-images.githubusercontent.com/34814295/145053655-97a4c705-b96d-4e5c-9658-ffb708a2a6e2.PNG)
+![Register an application](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053655-97a4c705-b96d-4e5c-9658-ffb708a2a6e2.PNG)
 
 1. Visit your Azure Active Directory blade
 2. Select **App registrations** on the left menu
@@ -49,11 +49,11 @@ You will need to create a client secret as a means for the service principal ass
 
 NOTE: Secrets expire, default is 6 months and the longest they can be configured to last is 24 months. You will need to create a new secret and update the variable in Azure Automation before the existing expires.
 
-![Certificates & secrets](https://user-images.githubusercontent.com/34814295/145053755-e7d54fec-7f98-4297-89e7-0342021c7415.PNG)
+![Certificates & secrets](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053755-e7d54fec-7f98-4297-89e7-0342021c7415.PNG)
 
-![Add a client secret](https://user-images.githubusercontent.com/34814295/145053828-0f5be38e-5507-4f87-92fc-660a64490684.png)
+![Add a client secret](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053828-0f5be38e-5507-4f87-92fc-660a64490684.png)
 
-![Copy secret value](https://user-images.githubusercontent.com/34814295/145053876-477f9cb8-be41-41c7-9a51-d4535551a043.png)
+![Copy secret value](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053876-477f9cb8-be41-41c7-9a51-d4535551a043.png)
 
 1. When you register a new application, it will automatically take you to the application blade, if not you can select it from Azure AD > App registration.
 2. Select **Certificates & secrets** from the left menu

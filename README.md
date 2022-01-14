@@ -24,7 +24,7 @@ Architecture solutions are defined by three categories: Azure firewall and third
 
 *Figure 1. TIC 3.0 Compliant Architecture with Firewall Uploading Logs to CLAW*
 
-![TIC 3.0 Compliance Architecture with Azure Firewall Uploading Logs to CLAW](https://user-images.githubusercontent.com/34814295/149363613-420efd44-bf76-41cd-8fd0-d597a1f3cf0d.png)
+![TIC 3.0 Compliance Architecture with Azure Firewall Uploading Logs to CLAW](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149363613-420efd44-bf76-41cd-8fd0-d597a1f3cf0d.png)
 
 ### Components
 
@@ -161,7 +161,7 @@ Deploys all resources to generate, collect, and deliver logs to CLAW. Includes v
 - Storage account.
 - Virtual machine on the server subnet to generate internet-bound traffic.
 
-![Complete Solution](https://user-images.githubusercontent.com/34814295/149368081-3db55d08-9b04-4ab8-ab12-8b69cd3692c6.png)
+![Complete Solution](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368081-3db55d08-9b04-4ab8-ab12-8b69cd3692c6.png)
 
 #### Network + Log Analytics + Automation account
 
@@ -180,7 +180,7 @@ Deploys all Azure resources for the network, logging, and automation. Does NOT i
 - Alert on failed jobs will trigger email.
 - Storage account.
 
-![Network + Log Analytics + Automation](https://user-images.githubusercontent.com/34814295/149368518-8bdd635d-9e44-4c34-b666-d3d2ad11dd21.png)
+![Network + Log Analytics + Automation](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368518-8bdd635d-9e44-4c34-b666-d3d2ad11dd21.png)
 
 #### Log Analytics + Automation account
 
@@ -196,7 +196,7 @@ Solution includes the following:
 - Alert on failed jobs will trigger email.
 - Storage account.
 
-![Log Analytics + Automation account](https://user-images.githubusercontent.com/34814295/149368776-27f1ec73-01e8-4d08-b557-edeff6a3f04e.png)
+![Log Analytics + Automation account](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368776-27f1ec73-01e8-4d08-b557-edeff6a3f04e.png)
 
 #### Automation account only
 
@@ -211,7 +211,7 @@ Solution includes the following
 - Alert on failed jobs will trigger email.
 - Storage account.
 
-![Automation account Only](https://user-images.githubusercontent.com/34814295/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
+![Automation account Only](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
 
 ## Pricing
 
