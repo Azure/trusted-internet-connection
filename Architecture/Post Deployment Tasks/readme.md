@@ -23,15 +23,15 @@ The following needs to be performed, for all solutions, once deployment is compl
 
 The Log Analytics workspace must be created before you can give the enterprise application the reader role. This role allows the enterprise application service principle read-only access to the resource like executing queries.
 
-![Log Analytics workspace Access control](https://user-images.githubusercontent.com/34814295/145061916-48acf8e5-f3f5-473c-879e-2c34baacc7f2.PNG)
+![Log Analytics workspace Access control](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145061916-48acf8e5-f3f5-473c-879e-2c34baacc7f2.PNG)
 
-![Role assignment](https://user-images.githubusercontent.com/34814295/145061980-1dc67638-13c7-4c25-9f7a-120e1c01205e.PNG)
+![Role assignment](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145061980-1dc67638-13c7-4c25-9f7a-120e1c01205e.PNG)
 
-![Select members](https://user-images.githubusercontent.com/34814295/145062049-a22b2400-7406-44b3-a7f7-6176a31e161c.PNG)
+![Select members](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062049-a22b2400-7406-44b3-a7f7-6176a31e161c.PNG)
 
-![Description](https://user-images.githubusercontent.com/34814295/145062154-6a2b7f11-f876-45cb-83f3-570d6462fa21.PNG)
+![Description](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062154-6a2b7f11-f876-45cb-83f3-570d6462fa21.PNG)
 
-![Review and assign](https://user-images.githubusercontent.com/34814295/145062284-5ba8b1df-5a37-4456-b542-f345cbe1a0b0.png)
+![Review and assign](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062284-5ba8b1df-5a37-4456-b542-f345cbe1a0b0.png)
 
 1. Go to the Log Analytics Workspace that will receive the Azure Firewall Diagnostic Settings logs.
 2. Select **Access control (IAM)**
@@ -55,9 +55,9 @@ The Log Analytics workspace must be created before you can give the enterprise a
 
 When proceeding through the steps in the following Guide, use the recently created or pre-existing Log Analytics workspace associated with the deployed resources.
 
-![Azure AD Diagnostic settings](https://user-images.githubusercontent.com/34814295/146437732-d820efc6-4673-4ca9-8dd5-08302fd50b5e.PNG)
+![Azure AD Diagnostic settings](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146437732-d820efc6-4673-4ca9-8dd5-08302fd50b5e.PNG)
 
-![Configure Diagnostic settings](https://user-images.githubusercontent.com/34814295/146437804-69bbb552-a1b7-4d58-8778-1c0895485e7c.png)
+![Configure Diagnostic settings](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146437804-69bbb552-a1b7-4d58-8778-1c0895485e7c.png)
 
 1. Visit your Azure Active Directory blade
 2. Scroll down and select **Diagnostic settings** from the left menu
@@ -100,17 +100,17 @@ NOTE: Each schedule should only collect the logs for a single purpose, though it
 
 ### Default schedule link
 
-![Runbooks](https://user-images.githubusercontent.com/34814295/145062436-0f99c019-e8be-466e-88e4-535a299dbf61.PNG)
+![Runbooks](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062436-0f99c019-e8be-466e-88e4-535a299dbf61.PNG)
 
-![Link to schedule](https://user-images.githubusercontent.com/34814295/145062503-7cea21a0-fba3-4b75-9929-346e0dcff67f.png)
+![Link to schedule](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062503-7cea21a0-fba3-4b75-9929-346e0dcff67f.png)
 
-![Schedule runbook overview](https://user-images.githubusercontent.com/34814295/145062574-47e71285-a2aa-4d27-af66-6a963b11aab4.png)
+![Schedule runbook overview](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062574-47e71285-a2aa-4d27-af66-6a963b11aab4.png)
 
-![Select schedule](https://user-images.githubusercontent.com/34814295/145062630-1a4afe55-7fb2-415c-89f6-5d89e33bf501.png)
+![Select schedule](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062630-1a4afe55-7fb2-415c-89f6-5d89e33bf501.png)
 
-![Approve selection](https://user-images.githubusercontent.com/34814295/145062728-d0592fd3-0e82-43e8-9605-ad95d2d9eb1f.png)
+![Approve selection](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062728-d0592fd3-0e82-43e8-9605-ad95d2d9eb1f.png)
 
-![Verify](https://user-images.githubusercontent.com/34814295/145062809-6a9bdbc9-cc26-45aa-b489-85c5fdb2c9d9.PNG)
+![Verify](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062809-6a9bdbc9-cc26-45aa-b489-85c5fdb2c9d9.PNG)
 
 1. Go to the Automation account created during deployment
 2. Select **Runbooks**
@@ -137,13 +137,13 @@ NOTE: Each schedule should only collect the logs for a single purpose, though it
 
 ![Select schedule](https://user-images.githubusercontent.com/34814295/145062630-1a4afe55-7fb2-415c-89f6-5d89e33bf501.png)
 
-![Select Configure parameters and run settings](https://user-images.githubusercontent.com/34814295/146452556-2f6db367-2ab0-4fcb-be98-00a4bc6af377.png)
+![Select Configure parameters and run settings](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146452556-2f6db367-2ab0-4fcb-be98-00a4bc6af377.png)
 
-![Set paramters](https://user-images.githubusercontent.com/34814295/146452635-0ade8a0e-85cc-44c5-afd3-3fe1cb65d821.PNG)
+![Set paramters](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146452635-0ade8a0e-85cc-44c5-afd3-3fe1cb65d821.PNG)
 
-![Select OK](https://user-images.githubusercontent.com/34814295/146452678-12ab40b6-7c80-47da-978e-657205681ff4.png)
+![Select OK](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146452678-12ab40b6-7c80-47da-978e-657205681ff4.png)
 
-![Verify](https://user-images.githubusercontent.com/34814295/146452720-2f6b64a9-e425-431d-b95d-2598a531e734.PNG)
+![Verify](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\146452720-2f6b64a9-e425-431d-b95d-2598a531e734.PNG)
 
 1. Go to the Automation account created during deployment
 
@@ -183,9 +183,9 @@ The variables are encrypted. This means that you or anyone cannot view them from
 
 This example walks through updating the AWSAccessKey, repeat the steps for each Variable. 
 
-![Edit variable](https://user-images.githubusercontent.com/34814295/145062874-d1aa76c1-30ac-45f0-a0e0-db86124229b0.PNG)
+![Edit variable](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062874-d1aa76c1-30ac-45f0-a0e0-db86124229b0.PNG)
 
-![Save variable](https://user-images.githubusercontent.com/34814295/145062937-8a6eb0d8-2108-4a54-8bcb-0fd0e151a556.png)
+![Save variable](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\145062937-8a6eb0d8-2108-4a54-8bcb-0fd0e151a556.png)
 
 1. Go to the Automation account used in the previous step (same account created during deployment)
 2. Select **Variables** from the left hand menu, you will have to scroll down to view it
@@ -205,4 +205,4 @@ If you used the complete solution, then you are generating logs on your Azure fi
 
 In both scenarios, Azure firewall logs are sent to the Log Analytics workspace. Every 60 minutes, starting 1 hour after the deployment, Azure Automation will query the Log Analytics workspace and send the query in JSON format to the CLAW.
 
-![TIC 3.0 Architecture](https://user-images.githubusercontent.com/34814295/144664138-4aaf0edb-6679-448d-a6b8-b147edb10945.png)
+![TIC 3.0 Architecture](https://user-images.githubusercontent.com/34814295/149363613-420efd44-bf76-41cd-8fd0-d597a1f3cf0d.png)
