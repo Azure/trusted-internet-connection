@@ -63,7 +63,7 @@ Deciding which architecture and resources to deploy, depends on what architectur
 
 ### Firewalls
 
-- If the organization wants to test using an Automation account, then deploy the [Complete](https://github.com/Azure/trusted-internet-connection#complete) solution to a test/dev environment.
+- If the organization wants to test using an Automation account, then deploy the [Complete](#complete) solution to a test/dev environment.
 - If the organization has an application in Azure that is routed back on-premises and have not deployed a firewall in Azure, then deploy the [Network + Log Analytics + Automation](https://github.com/Azure/trusted-internet-connection#network--log-analytics--automation-account).
 - If the organization has an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises, then deploy the [Log Analytics + Automation account](https://github.com/Azure/trusted-internet-connection#log-analytics--automation-account).
 - If the organization is using a Log Analytics workspace, along with an Azure Firewall deployed and are routing the application through the Azure Firewall back to on-premises [Automation account only](https://github.com/Azure/trusted-internet-connection#automation-account-only).
