@@ -91,7 +91,7 @@ You must have the following before deployment:
 
 - Resource Group.
 - Register an application.
-- Create Secret for a registered application.
+- Create secret for a registered application.
 
 Though you can deploy all of the Azure resources, to actually send log data to a CISA CLAW to support the TIC 3.0 compliance you will need the following: 
 
