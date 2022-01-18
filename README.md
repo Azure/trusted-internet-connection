@@ -78,12 +78,11 @@ You must have the following before deployment:
 
 - Resource Group.
 - Register an Enterprise application.
-  - This will be used to provide reader access to Log Analytics workspace (Log Analytics workspace).
 - Create Secret for Enterprise application.
 
 Though you can deploy all of the Azure resources, to actually send log data to a CISA CLAW to support the TIC 3.0 compliance you will need the following: 
 
-- Request CISA provide S3 bucket access key, secret, and S3 bucket name.
+- Request CISA provide S3 bucket access key, secret, S3 bucket name, and network line-of-sight.
 - Collect Tenant ID.
 
 ### Post deployment tasks for all solutions
@@ -92,43 +91,30 @@ For step by step details visit [Post deployment](https://github.com/Azure/truste
 
 The following needs to be performed once deployment is complete. These are the tasks that an ARM template cannot perform and requires some manual effort. 
 
-- Add enterprise application with reader role to Log Analytics workspace (Log Analytics workspace).
+- Add enterprise application with reader role to Log Analytics workspace.
 - Link schedule to runbook.
-- Update Automation account variables with your unique values 
-  - CISA provided CLAW S3 access key
-  - CISA provided CLAW S3 access secret
-  - Unique S3 bucket name
-  - Log Analytics workspace ID
-  - Tenant ID
-  - Enterprise application ID
-  - Enterprise application secret
+- Update Automation account variables.
 
-### Upload to CLAW runbook
-
-For more details and to view the runbook visit [UploadToCLAW-S3](https://github.com/Azure/trusted-internet-connection/blob/main/Runbook/UploadToCLAW-S3.ps1)
+### CLAW runbook execution
 
 The Automation account runs a PowerShell-based Runbook to query the Log Analytics workspace, format the data into a JSON, and stream it to the CLAW. The reason for using stream is to break it down into small chunks to reduce the performance impact of reading large files at once. Reading the data from a 250 mb file before uploading it may cause the process to fail. AWSPowerShell tools are used to connect to the S3 bucket and upload the JSON data into a datatime.json file.
 
-The runbook uses encrypted Automation account variables to simplify initial configuration and ongoing maintenance. Once the organziation deploys the Automation account, the runbook will not need modification. Administrators will perform the initial configuration by updating the values of each variable (See [Prerequisite tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks)). When the CLAW S3 secret and enterprise application secret are rotated, the administrators only need to update the appropriate variable. 
+The runbook uses encrypted Automation account variables to simplify initial configuration and ongoing maintenance. Once the organization deploys the Automation account, the runbook will not need modification. Administrators will perform the initial configuration by updating the values of each variable. When the CLAW S3 secret and enterprise application secret is rotated, the administrators only need to update the appropriate variable. 
 
 #### Alerting
 
-An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can dig into the runbook history for more details on why the runbook failed.
+An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can review the runbook history for more details on why the runbook failed.
 
 
 ### Azure Firewall supported solutions
 
-The following solutions leverage the native Azure Firewall for inbound traffic management into your Azure application environment. Select your solution based on the maturity of your Azure environment. Organizations with an Azure Firewall and Log Analytics workspace should use Automation account Only solution.
+The following solutions leverage the native Azure Firewall for inbound traffic management into your Azure application environment. Select your solution based on the topology of your Azure environment. Organizations with an Azure Firewall and Log Analytics workspace should use "Automation account only" solution.
 
-1. [Complete](#complete)
-   1. Includes all resources and a virtual machine to generate internet-bound traffic.
-2. [Network + Log Analytics + Automation](#network--log-analytics--automation-account)
-   1. This includes all Azure resources for the network, logging, automation, and alerting. Does NOT include a virtual machine.
-
-3. [Log Analytics + Automation account](#log-analytics--automation-account)
-   1. This is good if you already have VNETs, firewalls, and route table/route server. Includes alerting.
-4. [Automation account only](#automation-account-only)
-   1. This is good if you already have networks and are using a centralized Log Analytics workspace. Includes alerting.
+1. [Complete](#complete). Includes all resources and a virtual machine to generate internet-bound traffic.
+2. [Network + Log Analytics + Automation](#network--log-analytics--automation-account). This includes all Azure resources for the network, logging, automation, and alerting. Does NOT include a virtual machine.
+   
+3. [Log Analytics + Automation account](#log-analytics--automation-account). This is good if you already have VNETs, firewalls, and route table/route server. Includes alerting.
+4. [Automation account only](#automation-account-only). This is good if you already have networks and are using a centralized Log Analytics workspace. Includes alerting.
 
 #### Complete
 
@@ -217,7 +203,7 @@ Evaluate your current architecture to determine which solution best upgrades wha
 - Contact your CISA representative to request a CLAW storage solution. 
 - Review the [prerequisite](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks) and [post deployment](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks) tasks. 
 - Use the Deploy the Azure button and deploy one or more of the solutions to a test environment to become familiar with the process and the deployed resources.
-  - [Deploy this scenario](https://github.com/Azure/trusted-internet-connection#deploy-this-scenario)
+  - [Deploy this scenario](#deploy-this-scenario)
 - Evaluate Azure Firewall routing 
   - [Deploy & configure Azure Firewall using the Azure portal | Microsoft Docs](https://docs.microsoft.com/en-us/azure/firewall/tutorial-firewall-deploy-portal)
 
