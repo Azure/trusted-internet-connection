@@ -9,9 +9,9 @@ You must have the following before deployment:
 - [Resource group](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#create-resource-group)
   - If you have appropriate permissions, you can create this during the deployment process.
 
-- [Register an enterprise application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#register-an-enterprise-application)
+- [Register an application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#register-an-application)
   - This will be used to provide Reader Access to Log Analytics workspace (LAW).
-- [Create secret for enterprise application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#create-secret-for-enterprise-application)
+- [Create secret for a registered application](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks#create-secret-for-a-registered-application)
 
 Though you can deploy all of the Azure resources, to actually send log data to a CISA CLAW to support the TIC 3.0 compliance you will need the following: 
 
@@ -24,11 +24,9 @@ Some organizations control resource group creation while others provide permissi
 
 You can create the resource group during the deployment process too.
 
-[Manage resource groups - Azure portal - Azure Resource Manager | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+### Register an application
 
-### Register an enterprise application
-
-You will need to register an enterprise application, this provides the authorization and access mechanism for the runbook to connect to the Log Analytics workspace to perform the necessary queries. It is suggested that you create a new application for the purpose of this effort. While you can use an existing application, each one should fulfil only a single purpose. It is useful to name the application based on its purpose. This example will use the name "UploadToCLAW" as the application name.
+You will need to register an application, this provides the authorization and access mechanism for the runbook to connect to the Log Analytics workspace to perform the necessary queries. It is suggested that you create a new application for the purpose of this effort. While you can use an existing application, each one should fulfil only a single purpose. It is useful to name the application based on its purpose. This example will use the name "UploadToCLAW" as the application name.
 
 ![App registration](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145053553-92a21faf-01c7-43e0-8d79-5d2023ca0715.PNG)
 
@@ -41,11 +39,9 @@ You will need to register an enterprise application, this provides the authoriza
    1. This example used, UploadToCLAW
 5. Select **Register**
 
-[Register your app with the Azure AD v2.0 endpoint - Microsoft Graph | Microsoft Docs](https://docs.microsoft.com/en-us/graph/auth-register-app-v2)
+### Create secret for a registered application
 
-### Create secret for enterprise application
-
-You will need to create a client secret as a means for the service principal associated with the enterprise application to authenticate. Once the secret value is created, it is only available to be copies for a short period of time, you may leave the screen and return. If you fail to copy the Value before it shows all "***************" wild cards, you should delete the secret and create a new one.
+You will need to create a client secret as a means for the service principal associated with the registered application to authenticate. Once the secret value is created, it is only available to be copies for a short period of time, you may leave the screen and return. If you fail to copy the Value before it shows all "***************" wild cards, you should delete the secret and create a new one.
 
 NOTE: Secrets expire, default is 6 months and the longest they can be configured to last is 24 months. You will need to create a new secret and update the variable in Azure Automation before the existing expires.
 
@@ -68,8 +64,6 @@ NOTE: Secrets expire, default is 6 months and the longest they can be configured
    1. Once the secret value is created, it is only available to be copies for a short period of time, you may leave the screen and return. If you fail to copy the Value before it shows all "***************" wild cards, you should delete the secret and create a new one.
 9. Save the value in a secure location. You will enter it into a variable in the Automation account.
 
-[Create an Azure AD app and service principal in the portal - Microsoft identity platform | Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
-
 ### Request CLAW access
 
 Your organization will need to contact your CISA representative to request CLAW access. When a formal process is published, this section will be updated with a link.
@@ -78,10 +72,15 @@ Your organization will need to contact your CISA representative to request CLAW 
 
 You will need your Tenant ID. Please safeguard this information. 
 
-[How to find your tenant ID - Azure Active Directory | Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant)
-
-# Ready to Deploy
+## Ready to Deploy
 
 Now you are ready to deploy your solution. Return to the main Readme.
 
 [TIC 3.0 Solutions](https://github.com/Azure/trusted-internet-connection#deploy-this-scenario)
+
+## Related Resources
+
+- [Manage resource groups - Azure portal - Azure Resource Manager | Microsoft Docs](https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/manage-resource-groups-portal#create-resource-groups)
+- [Register your app with the Azure AD v2.0 endpoint - Microsoft Graph | Microsoft Docs](https://docs.microsoft.com/en-us/graph/auth-register-app-v2)
+- [Create an Azure AD app and service principal in the portal - Microsoft identity platform | Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
+- [How to find your tenant ID - Azure Active Directory | Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant)

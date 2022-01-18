@@ -2,7 +2,7 @@
 
 The following needs to be performed, for all solutions, once deployment is complete. These are the tasks that an ARM template cannot perform and requires manual effort. 
 
-- [Add enterprise application with reader role to Log Analytics workspace (LAW)](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#add-reader-role)
+- [Add registered application with reader role to Log Analytics workspace (LAW)](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#add-reader-role)
 - **OPTIONAL** - [Send Azure AD logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)
   - Support the access/auth log control.
 
@@ -16,12 +16,12 @@ The following needs to be performed, for all solutions, once deployment is compl
   - Unique S3 bucket name
   - LAW ID
   - Tenant ID
-  - Enterprise app ID
-  - Enterprise app secret 
+  - Registered app ID
+  - Registered app secret 
 
 ## Add reader role
 
-The Log Analytics workspace must be created before you can give the enterprise application the reader role. This role allows the enterprise application service principle read-only access to the resource like executing queries.
+The Log Analytics workspace must be created before you can give the registered application the reader role. This role allows the registered application service principle read-only access to the resource like executing queries.
 
 ![Log Analytics workspace Access control](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145061916-48acf8e5-f3f5-473c-879e-2c34baacc7f2.PNG)
 
@@ -40,16 +40,14 @@ The Log Analytics workspace must be created before you can give the enterprise a
 5. Select **Reader**
 6. Select **Next**
 7. Select **+ Select members**
-8. Search for the Enterprise Application created earlier
+8. Search for the Registered Application created earlier
    1. This example used, UploadToCLAW
-9. Select the Enterprise Application
+9. Select the Application
 10. Select **Select**
 11. Enter a description
     1. This example used, Used to execute queries for firewall logs to upload to CLAW
 12. Select **Review + assign**
 13. Select **Review + assign**
-
-[Assign Azure roles using the Azure portal - Azure RBAC | Microsoft Docs](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
 
 ## Send Azure AD logs to Log Analytics workspace
 
@@ -173,11 +171,9 @@ NOTE: Each schedule should only collect the logs for a single purpose, though it
 12. Verify that multiple schedules exist.
     1. There will be a schedule for each parameter that you set to 'true'
 
-[Manage runbooks in Azure Automation | Microsoft Docs](https://docs.microsoft.com/en-us/azure/automation/manage-runbooks#schedule-a-runbook-in-the-azure-portal)
-
 ## Update Automation account variables
 
-The ARM template created variables that are used by the runbook to access the Log Analytics workspace using the enterprise application service principle. Some variables will need to be updated over time. The enterprise application secret and the CLAW secrets will expire. It is important to renew the enterprise application secret and coordinate receipt of a new CLAW secret before they expire.
+The ARM template created variables that are used by the runbook to access the Log Analytics workspace using the application's service principle. Some variables will need to be updated over time. The registered application secret and the CLAW secrets will expire. It is important to renew the registered application secret and coordinate receipt of a new CLAW secret before they expire.
 
 The variables are encrypted. This means that you or anyone cannot view them from portal or consoles. They can only be decrypted from within a runbook. When you update a variable because a secret is expiring or you want to use a different Log Analytics workspace, you just edit the value which overwrite the existing when you save it.
 
@@ -197,10 +193,14 @@ This example walks through updating the AWSAccessKey, repeat the steps for each 
    2. Some values you will have collected during the [Prerequisite Tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Prerequisite%20Tasks)
 6. Select **Save**
 
-[Manage variables in Azure Automation | Microsoft Docs](https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell)
-
-# Ready for uploading logs to CLAW
+## Ready for uploading logs to CLAW
 
 If you used the complete solution, then you are generating logs on your Azure firewall. If you used another solution and have your application traversing your Azure firewall then you are generating logs.
 
 In both scenarios, Azure firewall logs are sent to the Log Analytics workspace. Every 60 minutes, starting 1 hour after the deployment, Azure Automation will query the Log Analytics workspace and send the query in JSON format to the CLAW.
+
+## Related Resources
+
+- [Assign Azure roles using the Azure portal - Azure RBAC | Microsoft Docs](https://docs.microsoft.com/en-us/azure/role-based-access-control/role-assignments-portal?tabs=current)
+- [Manage runbooks in Azure Automation | Microsoft Docs](https://docs.microsoft.com/en-us/azure/automation/manage-runbooks#schedule-a-runbook-in-the-azure-portal)
+- [Manage variables in Azure Automation | Microsoft Docs](https://docs.microsoft.com/en-us/azure/automation/shared-resources/variables?tabs=azure-powershell)
