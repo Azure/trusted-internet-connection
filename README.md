@@ -24,7 +24,7 @@ Architecture solutions are defined by two categories, Azure Firewall and third-p
 
 *Figure 1. TIC 3.0 Compliant Architecture with Firewall Uploading Logs to CLAW*
 
-![TIC 3.0 Compliance Architecture with Azure Firewall Uploading Logs to CLAW](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149363613-420efd44-bf76-41cd-8fd0-d597a1f3cf0d.png)
+![TIC 3.0 Compliance Architecture with Azure Firewall Uploading Logs to CLAW](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/144664138-4aaf0edb-6679-448d-a6b8-b147edb10945.png)
 
 ### Components
 
@@ -96,6 +96,8 @@ The following needs to be performed once deployment is complete. These are the t
 - Update Automation account variables.
 
 ### CLAW runbook execution
+
+For more details and to view the runbook visit [UploadToCLAW-S3](https://github.com/Azure/trusted-internet-connection/blob/main/Runbook/UploadToCLAW-S3.ps1)
 
 The Automation account runs a PowerShell-based Runbook to query the Log Analytics workspace, format the data into a JSON, and stream it to the CLAW. The reason for using stream is to break it down into small chunks to reduce the performance impact of reading large files at once. Reading the data from a 250 mb file before uploading it may cause the process to fail. AWSPowerShell tools are used to connect to the S3 bucket and upload the JSON data into a datatime.json file.
 
