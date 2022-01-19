@@ -16,13 +16,6 @@
                 "description": "This is the Resource Group Name where your Azure Firewall is located."
             }
         },
-        "storageAccountName": {
-            "defaultValue": "saeastdmz",
-            "type": "String",
-            "metadata": {
-                "description": "This is the storage account for the resources."
-            }
-        },
         "logAnalyticsWorkspaceName": {
             "defaultValue": "TheNameofYourLogAnalyticsWorkspace",
             "type": "String",

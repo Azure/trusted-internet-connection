@@ -57,6 +57,10 @@ Architecture solutions are defined by two categories, Azure Firewall and third-p
 
 Instead of using an Automation Account to query Log Analytics workspace, format the data into JSON, and upload it to the S3 bucket, the organization could develop their own Azure Function to perform the same task. This may be useful for an organization with software developers integrated into operations and are more familiar with developer languages or are heavily utilizing Azure Functions today.
 
+#### Log Analytics workspace
+
+Some organizations separate log collection into areas of responsibility. Azure AD logs may be sent to a Log Analytics workspace managed by an Identity team while network logs are sent to a separate Log Analytics workspace managed by the network team. The Log Analytics workspace in Figure 1 is depicted as a single workspace to simplify the diagram and for the scenarios outlined in this guide to reduce resource complexity.
+
 ## Considerations
 
 ### Availability
