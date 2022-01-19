@@ -33,13 +33,6 @@
                 "description": "This is the IP Range of the Azure Firewall subnet."
             }
         },
-        "storageAccountName": {
-            "defaultValue": "saeastdmz",
-            "type": "String",
-            "metadata": {
-                "description": "This is the storage account for the resources."
-            }
-        },
         "azureFirewallName": {
             "defaultValue": "FW-East-DMZ",
             "type": "String",
@@ -314,9 +307,6 @@
                     },
                     "azureFirewallNameResourceGroup": {
                         "value": "[parameters('azureFirewallNameResourceGroup')]"
-                    },
-                    "storageAccountName": {
-                        "value": "[parameters('storageAccountName')]"
                     },
                     "logAnalyticsWorkspaceName": {
                         "value": "[parameters('logAnalyticsWorkspaceName')]"

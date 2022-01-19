@@ -108,18 +108,6 @@ The following needs to be performed once deployment is complete. These are the t
 - Link schedule to runbook.
 - Update Automation account variables.
 
-### CLAW runbook execution
-
-For more details and to view the runbook visit [UploadToCLAW-S3](https://github.com/Azure/trusted-internet-connection/blob/main/Runbook/UploadToCLAW-S3.ps1)
-
-The Automation account runs a PowerShell-based Runbook to query the Log Analytics workspace, format the data into a JSON, and stream it to the CLAW. The reason for using stream is to break it down into small chunks to reduce the performance impact of reading large files at once. Reading the data from a 250 mb file before uploading it may cause the process to fail. AWSPowerShell tools are used to connect to the S3 bucket and upload the JSON data into a datatime.json file.
-
-The runbook uses encrypted Automation account variables to simplify initial configuration and ongoing maintenance. Once the organization deploys the Automation account, the runbook will not need modification. Administrators will perform the initial configuration by updating the values of each variable. When the CLAW S3 secret and registered application secret is rotated, the administrators only need to update the appropriate variable. 
-
-#### Alerting
-
-An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can review the runbook history for more details on why the runbook failed.
-
 
 ### Azure Firewall supported solutions
 
@@ -146,7 +134,6 @@ Deploys all resources to generate, collect, and deliver logs to CLAW. Includes v
 - Route table associated with ServerSubnet to route VM to firewall to generate logs.
 - Automation account with published runbook, schedule, and required AWSPowerShell module.
 - Alert on failed jobs will trigger email.
-- Storage account.
 - Virtual machine on the server subnet to generate internet-bound traffic.
 - All resources are deployed to a single subscription and VNET for simplicity. Resources could be deployed in any combination or resource groups or across multiple VNETs.
 
@@ -167,7 +154,6 @@ Deploys all Azure resources for the network, logging, and automation. Does NOT i
 - Route table to route servers to firewall for internet access.
 - Automation account with published runbook, schedule, and required AWSPowerShell module.
 - Alert on failed jobs will trigger email.
-- Storage account.
 
 ![Network + Log Analytics + Automation](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368518-8bdd635d-9e44-4c34-b666-d3d2ad11dd21.png)
 
@@ -183,7 +169,6 @@ Solution includes the following:
 - Configures Azure Firewall diagnostic settings to send logs to Log Analytics workspace.
 - Automation account with published runbook, schedule, and required AWSPowerShell module.
 - Alert on failed jobs will trigger email.
-- Storage account.
 
 ![Log Analytics + Automation account](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368776-27f1ec73-01e8-4d08-b557-edeff6a3f04e.png)
 
@@ -221,6 +206,7 @@ Evaluate your current architecture to determine which solution best upgrades wha
   - [Deploy this scenario](#deploy-this-scenario)
 - Evaluate Azure Firewall routing 
   - [Deploy & configure Azure Firewall using the Azure portal | Microsoft Docs](https://docs.microsoft.com/en-us/azure/firewall/tutorial-firewall-deploy-portal)
+- Additional details the ARM templates to simplify deployment or information to assist with integrating existing resources into the solution, please visit the [Trusted Internet Connection 3.0 solutions for Azure](https://github.com/Azure/trusted-internet-connection) in GitHub.
 
 ## Related Resources
 

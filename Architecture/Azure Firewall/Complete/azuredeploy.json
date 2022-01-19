@@ -54,13 +54,6 @@
                 "description": "This is the route table used to route Server subnet traffic to Azure Firewall."
             }
         },
-        "storageAccountName": {
-            "defaultValue": "saeastdmz",
-            "type": "String",
-            "metadata": {
-                "description": "This is the storage account for the resources."
-            }
-        },
         "azureFirewallName": {
             "defaultValue": "FW-East-DMZ",
             "type": "String",
@@ -488,9 +481,6 @@
                     },
                     "subnetFirewallName": {
                         "value": "[parameters('subnetFirewallName')]"
-                    },
-                    "storageAccountName": {
-                        "value": "[parameters('storageAccountName')]"
                     },
                     "logAnalyticsWorkspaceName": {
                         "value": "[parameters('logAnalyticsWorkspaceName')]"

@@ -16,13 +16,6 @@
                 "description": "This is the Resource Group where your Azure Firewall is located."
             }
         },
-        "storageAccountName": {
-            "defaultValue": "saeastdmz",
-            "type": "String",
-            "metadata": {
-                "description": "This is the storage account for the resources."
-            }
-        },
         "logAnalyticsWorkspaceName": {
             "defaultValue": "law-dmz",
             "type": "String",
@@ -134,9 +127,6 @@
                     },
                     "azureFirewallNameResourceGroup": {
                         "value": "[parameters('azureFirewallNameResourceGroup')]"
-                    },
-                    "storageAccountName": {
-                        "value": "[parameters('storageAccountName')]"
                     },
                     "logAnalyticsWorkspaceName": {
                         "value": "[parameters('logAnalyticsWorkspaceName')]"
