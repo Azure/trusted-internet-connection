@@ -61,6 +61,10 @@ Instead of using an Automation Account to query Log Analytics workspace, format 
 
 Some organizations separate log collection into areas of responsibility. Azure AD logs may be sent to a Log Analytics workspace managed by an Identity team while network logs are sent to a separate Log Analytics workspace managed by the network team. The Log Analytics workspace in Figure 1 is depicted as a single workspace to simplify the diagram and for the scenarios outlined in this guide to reduce resource complexity.
 
+#### App Registration vs. Managed Identity
+
+The scenarios leverage app registration to create a Service Principle and an secret. The service principle and secret are used to authenticate the runbook to access the Log Analytics workspace. Managed Identity is another capability for the Automation account to access the Log Analytics workspace. Organizations may utilize either method. 
+
 ## Considerations
 
 ### Availability
