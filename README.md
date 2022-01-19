@@ -182,8 +182,7 @@ Solution includes the following
 
 - Configures Azure Firewall diagnostic settings to send logs to Log Analytics workspace.
 - Automation account with published runbook, schedule, and required AWSPowerShell module.
-- Alert on failed jobs will trigger email.
-- Storage account.
+- Alert on failed jobs will trigger email.s
 
 ![Automation account Only](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
 
