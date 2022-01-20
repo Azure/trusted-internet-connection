@@ -58,9 +58,9 @@ This is a runbook that is provided for custom solutions requiring TIC 3.0 logs t
 
 ### Azure Resource Management (ARM) Templates
 
-ARM templates are used to lay the ground work for you to deploy the resources necessary to support TIC 3.0 compliance. The templates are the "azuredeploy.json" files within the Architecture folder structure. The ARM templates use a combination of linked and nested templates to simplify code maintenance and provide consistency during deployment. If you want to modify any of the code, please fork the repo and update accordingly. 
+ARM templates are used to lay the ground work for you to deploy the resources necessary to support TIC 3.0 compliance. The templates are the "azuredeploy.json" files within the Architecture folder structure. The ARM templates use a combination of linked and nested templates to simplify code maintenance and provide consistency during deployment. If you want to modify any of the code, please fork the repo and update accordingly. The following figure shows which resources are deployed with each Azure Firewall scenario.
 
-![image-20220120123840460](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\150392354-e1a3eef5-2559-4660-8805-0b2d2e4ce093.png)
+![ARM Template Structure for Azure Firewall Scenarios](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/150392354-e1a3eef5-2559-4660-8805-0b2d2e4ce093.png)
 
 ### Azure Automation Account
 
