@@ -166,7 +166,7 @@
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetFirewallName'))]",
                 "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]",
-                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', concat(parameters('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup'))]"
+                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', parameters('azureFirewallPoliciesName'), 'DefaultNetworkRuleCollectionGroup')]"
             ],
             "properties": {
                 "sku": {
