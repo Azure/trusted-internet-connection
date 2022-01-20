@@ -23,11 +23,18 @@
                 "description": "This is the Log Analytics Workspace name. This is where the Firewall logs will be sent."
             }
         },
+        "logAnalyticsWorkspaceLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Log Analytics workspace will deploy."
+            }
+        },
         "logAnalyticsResourceGroupName": {
             "defaultValue": "ResourceGroupNameofLogAnalytics",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group Name where your Log Analytics Workspace located."
+                "description": "This is the Resource Group Name where your Log Analytics Workspace will deploy."
             }
         },
         "automationAccountName": {
@@ -35,6 +42,13 @@
             "type": "String",
             "metadata": {
                 "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
+            }
+        },
+        "automationAccountLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Automation account will deploy."
             }
         },
         "scheduleName": {
@@ -95,7 +109,7 @@
             "type": "microsoft.operationalinsights/workspaces",
             "apiVersion": "2021-06-01",
             "name": "[parameters('logAnalyticsWorkspaceName')]",
-            "location": "eastus",
+            "location": "[parameters('logAnalyticsWorkspaceLocation')]",
             "properties": {
                 "sku": {
                     "name": "PerGB2018"
@@ -118,7 +132,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/TIC%203.0%20DMZ%20Architecture/Azure%20Firewall/Automation%20Account%20Only/azuredeploy.json",
+                    "uri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Azure%20Firewall/Automation%20Account%20Only/azuredeploy.json",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -136,6 +150,9 @@
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
+                    },
+                    "automationAccountLocation": {
+                        "value": "[parameters('automationAccountLocation')]"
                     },
                     "scheduleName": {
                         "value": "[parameters('scheduleName')]"

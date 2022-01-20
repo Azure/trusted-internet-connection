@@ -2,18 +2,18 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "storageAccountName": {
-            "defaultValue": "saeastdmz",
-            "type": "String",
-            "metadata": {
-                "description": "This is the storage account for the resources."
-            }
-        },
         "automationAccountName": {
             "defaultValue": "AA-UploadLogsToCLAW",
             "type": "String",
             "metadata": {
                 "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
+            }
+        },
+        "automationAccountLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Automation account will deploy."
             }
         },
         "scheduleName": {
@@ -68,7 +68,7 @@
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
             "name": "[parameters('automationAccountName')]",
-            "location": "eastus",
+            "location": "[parameters('automationAccountLocation')]",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -100,7 +100,7 @@
             "type": "Microsoft.Automation/automationAccounts/runbooks",
             "apiVersion": "2019-06-01",
             "name": "[concat(parameters('automationAccountName'), '/' , parameters('runbookName'))]",
-            "location": "eastus",
+            "location": "[parameters('automationAccountLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
             ],
@@ -284,7 +284,7 @@
                 "emailReceivers": [
                     {
                         "name": "Email_-EmailAction-",
-                        "emailAddress": "[parameters('failedRunbookAlertEmail')]",
+                        "emailAddress": "[parameters('failedRunbookAlertEmail')[copyIndex()]]",
                         "useCommonAlertSchema": true
                     }
                 ],
@@ -342,7 +342,7 @@
                 },
                 "autoMitigate": false,
                 "targetResourceType": "Microsoft.Automation/automationAccounts",
-                "targetResourceRegion": "eastus",
+                "targetResourceRegion": "[parameters('automationAccountLocation')]",
                 "actions": [
                     {
                         "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]",
@@ -350,141 +350,6 @@
                     }
                 ]
             }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2021-06-01",
-            "name": "[parameters('storageAccountName')]",
-            "location": "eastus",
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "kind": "Storage",
-            "properties": {
-                "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": true,
-                "networkAcls": {
-                    "bypass": "AzureServices",
-                    "virtualNetworkRules": [],
-                    "ipRules": [],
-                    "defaultAction": "Allow"
-                },
-                "supportsHttpsTrafficOnly": true,
-                "encryption": {
-                    "services": {
-                        "file": {
-                            "keyType": "Account",
-                            "enabled": true
-                        },
-                        "blob": {
-                            "keyType": "Account",
-                            "enabled": true
-                        }
-                    },
-                    "keySource": "Microsoft.Storage"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ],
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                },
-                "deleteRetentionPolicy": {
-                    "enabled": false
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/queueServices",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ],
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ],
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/SchemasTable')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/WADDiagnosticInfrastructureLogsTable')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/WADMetricsPT1HP10DV2S20211125')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/WADMetricsPT1MP10DV2S20211125')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/WADPerformanceCountersTable')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
-            "apiVersion": "2021-06-01",
-            "name": "[concat(parameters('storageAccountName'), '/default/WADWindowsEventLogsTable')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('storageAccountName'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
-            ]
         }
     ]
 }

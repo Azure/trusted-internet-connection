@@ -9,6 +9,13 @@
                 "description": "This VNET will be created during deployment."
             }
         },
+        "virtualNetworksLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your virtual network will deploy."
+            }
+        },
         "virtualNetworksIPRange": {
             "defaultValue": "192.168.0.0/24",
             "type": "String",
@@ -40,6 +47,13 @@
                 "description": "This is the Azure Firewall name."
             }
         },
+        "azureFirewallLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Azure Firewall will deploy."
+            }
+        },
         "azureFirewallNameResourceGroup": {
             "defaultValue": "[resourceGroup().name]",
             "type": "String",
@@ -54,6 +68,13 @@
                 "description": "This is the Azure Firewall Policy name."
             }
         },
+        "azureFirewallPoliciesLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Azure Firewall policies will deploy."
+            }
+        },
         "publicIPAzureFirewallName": {
             "defaultValue": "PIP-FW-East-DMZ",
             "type": "String",
@@ -61,11 +82,25 @@
                 "description": "This is the public IP address name for the Firewall."
             }
         },
+        "publicIPAzureFirewallLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where the public IP address for your Azure Firewall will deploy."
+            }
+        },
         "logAnalyticsWorkspaceName": {
             "defaultValue": "law-dmz",
             "type": "String",
             "metadata": {
                 "description": "This is the Log Analytics Workspace name. This is where the Firewall logs will be sent."
+            }
+        },
+        "logAnalyticsWorkspaceLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Log Analytics workspace will deploy."
             }
         },
         "logAnalyticsResourceGroupName": {
@@ -80,6 +115,13 @@
             "type": "String",
             "metadata": {
                 "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
+            }
+        },
+        "automationAccountLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Automation account will deploy."
             }
         },
         "scheduleName": {
@@ -140,7 +182,7 @@
             "type": "Microsoft.Network/azureFirewalls",
             "apiVersion": "2020-11-01",
             "name": "[parameters('azureFirewallName')]",
-            "location": "eastus",
+            "location": "[parameters('azureFirewallLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetFirewallName'))]",
@@ -178,7 +220,7 @@
             "type": "Microsoft.Network/firewallPolicies",
             "apiVersion": "2020-11-01",
             "name": "[parameters('azureFirewallPoliciesName')]",
-            "location": "eastus",
+            "location": "[parameters('azureFirewallPoliciesLocation')]",
             "properties": {
                 "sku": {
                     "tier": "Premium"
@@ -193,7 +235,7 @@
             "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
             "apiVersion": "2020-11-01",
             "name": "[concat(parameters('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
-            "location": "eastus",
+            "location": "[parameters('azureFirewallPoliciesLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]"
             ],
@@ -236,7 +278,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
             "name": "[parameters('virtualNetworksName')]",
-            "location": "eastus",
+            "location": "[parameters('virtualNetworksLocation')]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -276,7 +318,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2020-11-01",
             "name": "[parameters('publicIPAzureFirewallName')]",
-            "location": "eastus",
+            "location": "[parameters('publicIPAzureFirewallLocation')]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -298,7 +340,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "https://raw.githubusercontent.com/paullizer/trustedInternetConnection/main/TIC%203.0%20DMZ%20Architecture/Azure%20Firewall/Log%20Analytics%20and%20Automation%20Account/azuredeploy.json",
+                    "uri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Azure%20Firewall/Log%20Analytics%20and%20Automation%20Account/azuredeploy.json",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
@@ -311,11 +353,17 @@
                     "logAnalyticsWorkspaceName": {
                         "value": "[parameters('logAnalyticsWorkspaceName')]"
                     },
+                    "logAnalyticsWorkspaceLocation": {
+                        "value": "[parameters('logAnalyticsWorkspaceLocation')]"
+                    },
                     "logAnalyticsResourceGroupName": {
                         "value": "[parameters('logAnalyticsResourceGroupName')]"
                     },
                     "automationAccountName": {
                         "value": "[parameters('automationAccountName')]"
+                    },
+                    "automationAccountLocation": {
+                        "value": "[parameters('automationAccountLocation')]"
                     },
                     "scheduleName": {
                         "value": "[parameters('scheduleName')]"

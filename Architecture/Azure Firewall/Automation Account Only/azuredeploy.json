@@ -37,6 +37,13 @@
                 "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
             }
         },
+        "automationAccountLocation": {
+            "defaultValue": "eastus",
+            "type": "String",
+            "metadata": {
+                "description": "This is the region where your Automation account will deploy."
+            }
+        },
         "scheduleName": {
             "defaultValue": "HourlyUploadsToCLAW",
             "type": "String",
@@ -96,7 +103,7 @@
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
             "name": "[parameters('automationAccountName')]",
-            "location": "eastus",
+            "location": "[parameters('automationAccountLocation')]",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -128,7 +135,7 @@
             "type": "Microsoft.Automation/automationAccounts/runbooks",
             "apiVersion": "2019-06-01",
             "name": "[concat(parameters('automationAccountName'), '/' , parameters('runbookName'))]",
-            "location": "eastus",
+            "location": "[parameters('automationAccountLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
             ],
@@ -312,7 +319,7 @@
                 "emailReceivers": [
                     {
                         "name": "Email_-EmailAction-",
-                        "emailAddress": "[parameters('failedRunbookAlertEmail')]",
+                        "emailAddress": "[parameters('failedRunbookAlertEmail')[copyIndex()]]",
                         "useCommonAlertSchema": true
                     }
                 ],
@@ -370,7 +377,7 @@
                 },
                 "autoMitigate": false,
                 "targetResourceType": "Microsoft.Automation/automationAccounts",
-                "targetResourceRegion": "eastus",
+                "targetResourceRegion": "[parameters('automationAccountLocation')]",
                 "actions": [
                     {
                         "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]",
