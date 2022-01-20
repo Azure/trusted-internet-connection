@@ -267,7 +267,7 @@
                 "emailReceivers": [
                     {
                         "name": "Email_-EmailAction-",
-                        "emailAddress": "[parameters('failedRunbookAlertEmail')[copyIndex()]]",
+                        "emailAddress": "[split(parameters('failedRunbookAlertEmail'),',')]",
                         "useCommonAlertSchema": true
                     }
                 ],
