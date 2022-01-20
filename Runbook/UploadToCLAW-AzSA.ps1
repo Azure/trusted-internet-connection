@@ -77,6 +77,8 @@ N\A
 Param(
 
     [Parameter(Mandatory=$false)]
+    [switch]$logAzureFirewall,
+    [Parameter(Mandatory=$false)]
     [switch]$logThirdpartyFirewall,
     [Parameter(Mandatory=$false)]
     [switch]$logAzureADAuth,
