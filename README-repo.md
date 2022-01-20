@@ -34,6 +34,10 @@ Azure supports many Network Virtual Appliance (NVA) also known as Third-party Fi
 
 Azure Front Door is another method for securing applications from the internet. Front Door supports Web Application Firewall (WAF) policies and will send WAF and traffic logs to Log Analytics workspace. Front Door also provides global load balancing. It is similar to an Application Gateway, where the App Gateway is regional. The solution provided in this directory will deploy the resources expecting an Azure Front Door to send logs to the Log Analytics workspace.
 
+### Post Deployment Tasks
+
+Additional tasks are required to complete integration of all components. Review [Post-deployment tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks) to complete the scenario. The only contents of this directory is the README.md.
+
 ### Visio
 
 This folder contains a copy of all Visio diagrams used in the articles and a few additional to assist with documentation and understanding.
@@ -52,6 +56,12 @@ This is a runbook that is provided for custom solutions requiring TIC 3.0 logs t
 
 ## Deployment Instructions
 
+### Azure Resource Management (ARM) Templates
+
+ARM templates are used to lay the ground work for you to deploy the resources necessary to support TIC 3.0 compliance. The templates are the "azuredeploy.json" files within the Architecture folder structure. The ARM templates use a combination of linked and nested templates to simplify code maintenance and provide consistency during deployment. If you want to modify any of the code, please fork the repo and update accordingly. 
+
+![image-20220120123840460](C:\Users\paullizer\OneDrive - Microsoft\Repos\GitHub\microsoftAzure\trusted-internet-connection\Architecture\Images\150392354-e1a3eef5-2559-4660-8805-0b2d2e4ce093.png)
+
 ### Azure Automation Account
 
 An Azure Automation Account is required as it will be used to execute the runbook. CISA has requested logs be sent in no longer than 30 minute intervals. So it is important to link a schedule with the runbook to meet this requirement. AWSPowerShell must be installed as a module in the Azure Automation Account. I have seen older automation accounts fail to properly install modules, so it may be necessary to create a new automation account instead of using an existing account. 
@@ -62,6 +72,6 @@ The Automation account runs a PowerShell-based Runbook to query the Log Analytic
 
 The runbook uses encrypted Automation account variables to simplify initial configuration and ongoing maintenance. Once the organization deploys the Automation account, the runbook will not need modification. Administrators will perform the initial configuration by updating the values of each variable. When the CLAW S3 secret and registered application secret is rotated, the administrators only need to update the appropriate variable. 
 
-#### Alerting
+### Alerting
 
 An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can review the runbook history for more details on why the runbook failed.
