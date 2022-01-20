@@ -23,6 +23,10 @@
                 "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
             }
         },
+        "scheduleCount": {
+            "type": "int",
+            "defaultValue": 5
+        },
         "baseTime": { 
             "type": "string", 
             "defaultValue": "[utcNow('u')]",
@@ -117,7 +121,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/schedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'))]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-', copyIndex())]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
             ],
@@ -127,6 +131,10 @@
                 "interval": 1,
                 "frequency": "Hour",
                 "timeZone": "America/New_York"
+            },
+            "copy": {
+                "name": "scheduleCount",
+                "count": "[parameters('scheduleCount')]"
             }
         },
         {

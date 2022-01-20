@@ -51,6 +51,10 @@
                 "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
             }
         },
+        "scheduleCount": {
+            "type": "int",
+            "defaultValue": 5
+        },
         "baseTime": { 
             "type": "string", 
             "defaultValue": "[utcNow('u')]",
@@ -152,7 +156,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/schedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-01')]",
+            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-', copyIndex())]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
             ],
@@ -162,66 +166,10 @@
                 "interval": 1,
                 "frequency": "Hour",
                 "timeZone": "America/New_York"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/schedules",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-02')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
-                "startTime": "[variables('startTime')]",
-                "interval": 1,
-                "frequency": "Hour",
-                "timeZone": "America/New_York"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/schedules",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-03')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
-                "startTime": "[variables('startTime')]",
-                "interval": 1,
-                "frequency": "Hour",
-                "timeZone": "America/New_York"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/schedules",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-04')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
-                "startTime": "[variables('startTime')]",
-                "interval": 1,
-                "frequency": "Hour",
-                "timeZone": "America/New_York"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/schedules",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-05')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
-                "startTime": "[variables('startTime')]",
-                "interval": 1,
-                "frequency": "Hour",
-                "timeZone": "America/New_York"
+            },
+            "copy": {
+                "name": "scheduleCount",
+                "count": "[parameters('scheduleCount')]"
             }
         },
         {
