@@ -38,10 +38,10 @@
             }
         },
         "runbookUri": {
-            "defaultValue": "https://raw.githubusercontent.com/MicrosoftDocs/Trusted-Internet-Connection/main/Runbook/UploadToCLAW-S3.ps1",
+            "defaultValue": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
             "type": "String",
             "metadata": {
-                "description": "DO NOT CHANGE, unless you know what you are doing. This is the github location of the runbook."
+                "description": "DO NOT CHANGE, unless you have cloned this repo and know what you are doing. This is the GitHub location of the runbook."
             }
         },
         "actionGroupName": {

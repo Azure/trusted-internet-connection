@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.3
+    1.4
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -18,10 +18,10 @@
 .TAGS
 
 .LICENSEURI 
-    https://github.com/MicrosoftDocs/Trusted-Internet-Connection/blob/main/LICENSE
+    https://github.com/Azure/trusted-internet-connection/blob/main/LICENSE
 
 .PROJECTURI 
-    https://github.com/MicrosoftDocs/Trusted-Internet-Connection
+    https://github.com/Azure/trusted-internet-connection
 
 .ICONURI
 
@@ -33,10 +33,10 @@
 .EXTERNALSCRIPTDEPENDENCIES
 
 .RELEASENOTES 
-    https://github.com/MicrosoftDocs/Trusted-Internet-Connection
+    https://github.com/Azure/trusted-internet-connection
 
 .LINK  
-    https://github.com/MicrosoftDocs/Trusted-Internet-Connection
+    https://github.com/Azure/trusted-internet-connection
     
 .EXAMPLE  
     Runbook triggered by Azure Automation Account with Schedule that runs every 
@@ -59,7 +59,7 @@
                        Process
 -----------------------------------------------------
     
-https://github.com/MicrosoftDocs/Trusted-Internet-Connection
+https://github.com/Azure/trusted-internet-connection
 
 ***************************************************#>
     
