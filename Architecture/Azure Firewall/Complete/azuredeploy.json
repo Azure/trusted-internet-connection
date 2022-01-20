@@ -9,11 +9,11 @@
                 "description": "This VNET will be created during deployment."
             }
         },
-        "virtualNetworksLocation": {
+        "networkLocation": {
             "defaultValue": "eastus",
             "type": "String",
             "metadata": {
-                "description": "This is the region where your virtual network will deploy."
+                "description": "This is the region where all network-based resources will deploy."
             }
         },
         "virtualNetworksIPRange": {
@@ -61,25 +61,11 @@
                 "description": "This is the route table used to route Server subnet traffic to Azure Firewall."
             }
         },
-        "routeTableLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your route table will deploy."
-            }
-        },
         "azureFirewallName": {
             "defaultValue": "FW-East-DMZ",
             "type": "String",
             "metadata": {
                 "description": "This is the Azure Firewall name."
-            }
-        },
-        "azureFirewallLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your Azure Firewall will deploy."
             }
         },
         "azureFirewallNameResourceGroup": {
@@ -103,25 +89,11 @@
                 "description": "This is the Azure Firewall Policy name."
             }
         },
-        "azureFirewallPoliciesLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your Azure Firewall policies will deploy."
-            }
-        },
         "publicIPAzureFirewallName": {
             "defaultValue": "PIP-FW-East-DMZ",
             "type": "String",
             "metadata": {
                 "description": "This is the public IP address name for the Azure Firewall."
-            }
-        },
-        "publicIPAzureFirewallLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where the public IP address for your Azure Firewall will deploy."
             }
         },
         "logAnalyticsWorkspaceName": {
@@ -152,25 +124,11 @@
                 "description": "This is the test server's VM name."
             }
         },
-        "virtualMachineLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your test server will deploy."
-            }
-        },
         "networkInterfaceName": {
             "defaultValue": "ni-vm-east-dmz",
             "type": "String",
             "metadata": {
                 "description": "This is the name for the test server's NIC."
-            }
-        },
-        "networkInterfaceLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where the network interface for your test server will deploy."
             }
         },
         "networkInterfaceIPaddress": {
@@ -187,13 +145,6 @@
                 "description": "This is the public IP address name for the test server."
             }
         },
-        "publicIPVMLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where the public IP address for your test server will deploy."
-            }
-        },
         "remoteIPAddressRDPToVM": {
             "defaultValue": "173.66.214.116",
             "type": "String",
@@ -206,13 +157,6 @@
             "type": "String",
             "metadata": {
                 "description": "This is the network security group name."
-            }
-        },
-        "networkSecurityGroupLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your network security group will deploy."
             }
         },
         "automationAccountName": {
@@ -251,7 +195,7 @@
             }
         },
         "runbookUri": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1"
+            "defaultValue": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
             "type": "String",
             "metadata": {
                 "description": "DO NOT CHANGE, unless you know what you are doing. This is the github location of the runbook."
@@ -300,7 +244,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2020-11-01",
             "name": "[parameters('networkSecurityGroupName')]",
-            "location": "[parameters('networkSecurityGroupLocation')]",
+            "location": "[parameters('networkLocation')]",
             "properties": {
                 "securityRules": [
                     {
@@ -349,7 +293,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2020-11-01",
             "name": "[parameters('publicIPVMName')]",
-            "location": "[parameters('publicIPVMLocation')]",
+            "location": "[parameters('networkLocation')]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -368,7 +312,7 @@
             "type": "Microsoft.Network/routeTables",
             "apiVersion": "2020-11-01",
             "name": "[parameters('routeTableName')]",
-            "location": "[parameters('routeTableLocation')]",
+            "location": "[parameters('networkLocation')]",
             "properties": {
                 "disableBgpRoutePropagation": false,
                 "routes": [
@@ -402,7 +346,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2021-07-01",
             "name": "[parameters('virtualMachineName')]",
-            "location": "[parameters('virtualMachineLocation')]",
+            "location": "[parameters('networkLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
             ],
@@ -471,7 +415,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2020-11-01",
             "name": "[parameters('networkInterfaceName')]",
-            "location": "[parameters('networkInterfaceLocation')]",
+            "location": "[parameters('networkLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPVMName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetServerName'))]",
@@ -538,29 +482,20 @@
                     "azureFirewallName": {
                         "value": "[parameters('azureFirewallName')]"
                     },
-                    "azureFirewallLocation": {
-                        "value": "[parameters('azureFirewallLocation')]"
-                    },
                     "azureFirewallNameResourceGroup": {
                         "value": "[parameters('azureFirewallNameResourceGroup')]"
                     },
                     "azureFirewallPoliciesName": {
                         "value": "[parameters('azureFirewallPoliciesName')]"
                     },
-                    "azureFirewallPoliciesLocation": {
-                        "value": "[parameters('azureFirewallPoliciesLocation')]"
-                    },
                     "publicIPAzureFirewallName": {
                         "value": "[parameters('publicIPAzureFirewallName')]"
-                    },
-                    "publicIPAzureFirewallLocation": {
-                        "value": "[parameters('publicIPAzureFirewallLocation')]"
                     },
                     "virtualNetworksName": {
                         "value": "[parameters('virtualNetworksName')]"
                     },
-                    "virtualNetworksLocation": {
-                        "value": "[parameters('virtualNetworksLocation')]"
+                    "networkLocation": {
+                        "value": "[parameters('networkLocation')]"
                     },
                     "virtualNetworksIPRange": {
                         "value": "[parameters('virtualNetworksIPRange')]"
