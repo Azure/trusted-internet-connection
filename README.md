@@ -63,7 +63,7 @@ Some organizations separate log collection into areas of responsibility. Azure A
 
 #### App Registration vs. Managed Identity
 
-The scenarios leverage app registration to create a Service Principle and an secret. The service principle and secret are used to authenticate the runbook to access the Log Analytics workspace. Managed Identity is another capability for the Automation account to access the Log Analytics workspace. Organizations may utilize either method. 
+The scenarios leverage an Azure AD App registration to create a Service Principal and a secret. That identity is used to authenticate the runbook to access the Log Analytics workspace. Managed Identity is another capability for the Automation account to access the Log Analytics workspace without the need to manage secrets. Organizations may utilize either method.
 
 ## Considerations
 
@@ -190,7 +190,7 @@ Solution includes the following
 
 - Configures Azure Firewall diagnostic settings to send logs to Log Analytics workspace.
 - Automation account with published runbook, schedule, and required AWSPowerShell module.
-- Alert on failed jobs will trigger email.s
+- Alert on failed jobs will trigger email.
 
 ![Automation account Only](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
 

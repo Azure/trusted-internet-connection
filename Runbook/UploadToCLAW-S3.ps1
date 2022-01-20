@@ -77,6 +77,8 @@ N\A
 Param(
 
     [Parameter(Mandatory=$false)]
+    [switch]$logAzureFirewall,
+    [Parameter(Mandatory=$false)]
     [switch]$logThirdpartyFirewall,
     [Parameter(Mandatory=$false)]
     [switch]$logAzureADAuth,
@@ -92,7 +94,7 @@ $errorActionPreference = "Stop"
 # a value the write-output in the function is added to the return value, causing
 # errors.
 $Global:jsonResults = ""
-
+$collectedLogs = $false
 <#***************************************************
                        Functions
 ***************************************************#>
@@ -112,8 +114,8 @@ function Get-LogAnalyticsData () {
     }
     catch {
         Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Ensure SPN has `
-        Reader access to the LAW, the SPN secret is valid, the Azure Firewall `
-        is sending diagnostic logs to the LAW, or verify the the `
+        Reader access to the Log Analytics workspace, the SPN secret is valid, the Azure Firewall `
+        is sending diagnostic logs to the Log Analytics workspace, or verify the the `
         Az.OperationalInsights module is installed in the Automation Account `
         Module section. This is a fatal error and will exit the script."
         Exit 0
@@ -172,7 +174,7 @@ try {
     $TenantId = Get-AutomationVariable -Name TenantId
 }
 catch {
-    Write-Error "Failed to collect TenantID, please verify variable exists `
+    Write-Error "Failed to collect TenantId, please verify variable exists `
     in the same Automation Account in which this script was run."
 }
 
@@ -279,39 +281,6 @@ catch {
     Exit 0
 }
 
-if (!($logThirdpartyFirewall -or $logAzureADAuth -or $logNetflow)){
-    $purpose = "Azure Firewall Logs"
-    $query = "AzureDiagnostics 
-    | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
-    | where TimeGenerated > ago(60m)
-    | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
-    | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
-    | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
-    | extend SourcePort = tostring(SourcePortInt), TargetPort = tostring(TargetPortInt) 
-    | extend Action = case(Action1a == '', 
-        case(Action1b == '', Action2, Action1b), Action1a),
-        Protocol = case(Protocol == '', Protocol2, Protocol),
-        SourceIP = case(SourceIP == '', SourceIP2, SourceIP),
-        TargetIP = case(TargetIP == '', TargetIP2, TargetIP),
-        SourcePort = case(SourcePort == '', 'N/A', SourcePort),
-        TargetPort = case(TargetPort == '', 'N/A', TargetPort)
-    | project 
-        TimeGenerated,
-        Protocol,
-        SourceIP,
-        SourcePort,
-        TargetIP,
-        TargetPort,
-        Action"
-    Get-LogAnalyticsData $purpose $query
-    If($Global:jsonResults){
-        Send-LogsToCLAW $purpose
-    }
-    else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
-    }
-}
-
 if ($logThirdpartyFirewall){
     $purpose = "Third-party Firewall Logs"
     $query = "Syslog | where TimeGenerated > ago(60m)"
@@ -321,6 +290,7 @@ if ($logThirdpartyFirewall){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -341,6 +311,7 @@ if ($logAzureADAuth){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -375,6 +346,7 @@ if ($logNetflow){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -392,6 +364,40 @@ if ($logAzureFrontDoor){
         SourcePort = tostring(clientPort_s)
     | extend Protocol = case(Protocol == '', Proto,tostring(requestProtocol_s)),
         SourceIP = case(SourceIP == '', tostring(clientIP_s), tostring(clientIp_s))
+    | project 
+        TimeGenerated,
+        Protocol,
+        SourceIP,
+        SourcePort,
+        TargetIP,
+        TargetPort,
+        Action"
+    Get-LogAnalyticsData $purpose $query
+    If($Global:jsonResults){
+        Send-LogsToCLAW $purpose
+    }
+    else {
+        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        $collectedLogs = $true
+    }
+}
+
+if (($logAzureFirewall) -or (!$collectedLogs)){
+    $purpose = "Azure Firewall Logs"
+    $query = "AzureDiagnostics 
+    | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
+    | where TimeGenerated > ago(60m)
+    | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
+    | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
+    | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
+    | extend SourcePort = tostring(SourcePortInt), TargetPort = tostring(TargetPortInt) 
+    | extend Action = case(Action1a == '', 
+        case(Action1b == '', Action2, Action1b), Action1a),
+        Protocol = case(Protocol == '', Protocol2, Protocol),
+        SourceIP = case(SourceIP == '', SourceIP2, SourceIP),
+        TargetIP = case(TargetIP == '', TargetIP2, TargetIP),
+        SourcePort = case(SourcePort == '', 'N/A', SourcePort),
+        TargetPort = case(TargetPort == '', 'N/A', TargetPort)
     | project 
         TimeGenerated,
         Protocol,
