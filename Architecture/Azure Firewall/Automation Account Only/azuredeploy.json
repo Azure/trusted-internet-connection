@@ -95,7 +95,7 @@
             "defaultValue": "first.last@mail.com",
             "type": "string",
             "metadata": {
-                "description": "This is the email(s) that will receive the failure notification. Seperate with comma."
+                "description": "This is the email that will receive the failure notification. Only one email can be used."
             }
         }
     },
@@ -267,7 +267,7 @@
                 "emailReceivers": [
                     {
                         "name": "Email_-EmailAction-",
-                        "emailAddress": "[split(parameters('failedRunbookAlertEmail'),',')]",
+                        "emailAddress": "[parameters('failedRunbookAlertEmail')]",
                         "useCommonAlertSchema": true
                     }
                 ],
