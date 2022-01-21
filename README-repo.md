@@ -62,6 +62,10 @@ ARM templates are used to lay the ground work for you to deploy the resources ne
 
 ![ARM Template Structure for Azure Firewall Scenarios](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/150392354-e1a3eef5-2559-4660-8805-0b2d2e4ce093.png)
 
+### Log Analytics workspace
+
+If multiple Log Analytics workspaces are used, then multiple Automation Accounts must be deployed, one Automation Account per Log Analytics workspace. If your organization has a Log Analytics workspace for Identity, then deploy an Automation Account and update runbook variables to access the Identity Log Analytics workspace and update parameters when setting up the scheduled task so that LogAzureAD is set to true. Deploy another Automation Account to connect to the Log Analytics workspace for network logs.
+
 ### Azure Automation Account
 
 An Azure Automation Account is required as it will be used to execute the runbook. CISA has requested logs be sent in no longer than 30 minute intervals. So it is important to link a schedule with the runbook to meet this requirement. AWSPowerShell must be installed as a module in the Azure Automation Account. I have seen older automation accounts fail to properly install modules, so it may be necessary to create a new automation account instead of using an existing account. 

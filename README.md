@@ -59,7 +59,9 @@ Instead of using an Automation Account to query Log Analytics workspace, format 
 
 #### Log Analytics workspace
 
-Some organizations separate log collection into areas of responsibility. Azure AD logs may be sent to a Log Analytics workspace managed by an Identity team while network logs are sent to a separate Log Analytics workspace managed by the network team. The Log Analytics workspace in Figure 1 is depicted as a single workspace to simplify the diagram and for the scenarios outlined in this guide to reduce resource complexity.
+Some organizations separate log collection into areas of responsibility. Azure AD logs may be sent to a Log Analytics workspace managed by an Identity team while network logs are sent to a separate Log Analytics workspace managed by the network team. The Log Analytics workspace in Figure 1 is depicted as a single workspace to simplify the diagram and for the scenarios outlined in this guide to reduce resource complexity. 
+
+If multiple Log Analytics workspaces are used, then multiple Automation Accounts must be deployed, one Automation Account per Log Analytics workspace. 
 
 #### App Registration vs. Managed Identity
 
@@ -67,12 +69,10 @@ The scenarios leverage an Azure AD App registration to create a Service Principa
 
 ## Considerations
 
-### Availability
-
 ### Operational excellence
 
 - [Azure Alerts](https://docs.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-overview)  is built into the solution to notify the organization when an upload fails to deliver logs to the CLAW. It is up to the organization to determine the severity of this alert and how to respond. 
-- Use ARM templates to speed up the deployment of additional TIC 3.0 architectures for new applications. 
+- Use Azure Resource Manager (ARM) templates to speed up the deployment of additional TIC 3.0 architectures for new applications. 
 
 ### Performance
 
