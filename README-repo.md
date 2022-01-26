@@ -11,6 +11,7 @@ This repo supports an article on the Azure Architecture Center (AAC) [INSERT LIN
   - Azure Firewall
   - Third-party Firewall
   - Azure Front Door
+  - Azure Application Gateway
   - Post Deployment Tasks
   - Visio
 - Runbook
@@ -32,7 +33,11 @@ Azure supports many Network Virtual Appliance (NVA) also known as Third-party Fi
 
 ### Azure Front Door
 
-Azure Front Door is another method for securing applications from the internet. Front Door supports Web Application Firewall (WAF) policies and will send WAF and traffic logs to Log Analytics workspace. Front Door also provides global load balancing. It is similar to an Application Gateway, where the App Gateway is regional. The solution provided in this directory will deploy the resources expecting an Azure Front Door to send logs to the Log Analytics workspace.
+Azure Front Door is a global load balancer and supports Web Application Firewall (WAF) policies. The WAF secures the internet facing application. Front Door will send WAF and traffic logs to Log Analytics workspace. The solution provided in this directory will deploy the resources expecting an Azure Front Door to send logs to the Log Analytics workspace.
+
+### Azure Application Gateway
+
+Azure Application Gateway is a regional load balancer and supports Web Application Firewall (WAF) policies. The WAF secures the internet facing application. App Gateway will send WAF and traffic logs to Log Analytics workspace.
 
 ### Post Deployment Tasks
 
@@ -56,11 +61,27 @@ This is a runbook that is provided for custom solutions requiring TIC 3.0 logs t
 
 ## Deployment Instructions
 
+### Azure Firewall vs. Front Door vs. Application Gateway
+
+Azure Firewall functions as a router and a firewall with more policies
+
 ### Azure Resource Management (ARM) Templates
 
-ARM templates are used to lay the ground work for you to deploy the resources necessary to support TIC 3.0 compliance. The templates are the "azuredeploy.json" files within the Architecture folder structure. The ARM templates use a combination of linked and nested templates to simplify code maintenance and provide consistency during deployment. If you want to modify any of the code, please fork the repo and update accordingly. The following figure shows which resources are deployed with each Azure Firewall scenario.
+ARM templates are used to lay the ground work for you to deploy the resources necessary to support TIC 3.0 compliance. The templates are the "azuredeploy.json" files within the Architecture folder structure. The ARM templates use a combination of linked and nested templates to simplify code maintenance and provide consistency during deployment. If you want to modify any of the code, please fork the repo and update accordingly. 
+
+#### Azure Firewall
+
+The following figure shows which resources are deployed with each Azure Firewall scenario.
 
 ![ARM Template Structure for Azure Firewall Scenarios](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/150392354-e1a3eef5-2559-4660-8805-0b2d2e4ce093.png)
+
+#### Azure Front Door
+
+The following figure shows which resources are deployed with each Azure Front Door scenario.
+
+#### Azure Application Gateway
+
+The following figure shows which resources are deployed with each Azure Application Gateway scenario.
 
 ### Log Analytics workspace
 
@@ -79,3 +100,10 @@ The runbook uses encrypted Automation account variables to simplify initial conf
 ### Alerting
 
 An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can review the runbook history for more details on why the runbook failed.
+
+
+
+## Related Resources
+
+- [Firewall, App Gateway for virtual networks - Azure Example Scenarios | Microsoft Docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/gateway/firewall-application-gateway)
+- [azure-docs/quickstart-arm-template.md at master · MicrosoftDocs/azure-docs (github.com)](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/quickstart-arm-template.md)
