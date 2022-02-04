@@ -31,10 +31,10 @@
             }
         },
         "logAnalyticsResourceGroupName": {
-            "defaultValue": "ResourceGroupNameofLogAnalytics",
+            "defaultValue": "[resourceGroup().name]",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group Name where your Log Analytics Workspace will deploy."
+                "description": "This is the Resource Group Name where you will deploy your Log Analytics Workspace."
             }
         },
         "automationAccountName": {
