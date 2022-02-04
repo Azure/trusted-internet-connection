@@ -79,7 +79,7 @@
             "defaultValue": "[resourceGroup().name]",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group where your Azure Firewall is located."
+                "description": "This is the Resource Group where you will deploy the Azure Firewall."
             }
         },
         "azureFirewallPoliciesName": {
@@ -111,10 +111,10 @@
             }
         },
         "logAnalyticsResourceGroupName": {
-            "defaultValue": "ResourceGroupNameofLogAnalytics",
+            "defaultValue": "[resourceGroup().name]",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group Name where your Log Analytics Workspace located."
+                "description": "This is the Resource Group Name where you will deploy the Log Analytics Workspace."
             }
         },
         "webAppServiceName": {
