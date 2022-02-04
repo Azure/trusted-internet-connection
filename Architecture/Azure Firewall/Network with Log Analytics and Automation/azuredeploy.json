@@ -17,7 +17,7 @@
             }
         },
         "virtualNetworksIPRange": {
-            "defaultValue": "192.168.0.0/24",
+            "defaultValue": "192.168.0.0/16",
             "type": "String",
             "metadata": {
                 "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
@@ -34,7 +34,7 @@
             }
         },
         "subnetFirewallIPRange": {
-            "defaultValue": "192.168.0.0/26",
+            "defaultValue": "192.168.0.0/24",
             "type": "String",
             "metadata": {
                 "description": "This is the IP Range of the Azure Firewall subnet."

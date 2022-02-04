@@ -17,7 +17,7 @@
             }
         },
         "virtualNetworksIPRange": {
-            "defaultValue": "192.168.0.0/24",
+            "defaultValue": "192.168.0.0/16",
             "type": "String",
             "metadata": {
                 "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
@@ -28,37 +28,44 @@
             "type": "String",
             "allowedValues": [
                 "AzureFirewallSubnet"
-                ],
+            ],
             "metadata": {
                 "description": "This is the subnet for the Azure Firewall. Its name is fixed."
             }
         },
         "subnetFirewallIPRange": {
-            "defaultValue": "192.168.0.0/26",
+            "defaultValue": "192.168.0.0/24",
             "type": "String",
             "metadata": {
                 "description": "This is the IP Range of the Azure Firewall subnet."
             }
         },
-        "subnetServerName": {
-            "defaultValue": "ServerSubnet",
+        "subnetExternalName": {
+            "defaultValue": "ExternalSubnet",
             "type": "String",
             "metadata": {
-                "description": "This is the subnet for the test server used to generate internet-bound traffic."
+                "description": "This is the subnet for the external (DMZ) facing app service."
             }
         },
-        "subnetServerIPRange": {
-            "defaultValue": "192.168.0.64/26",
+        "subnetExternalIPRange": {
+            "defaultValue": "192.168.1.0/24",
             "type": "String",
             "metadata": {
-                "description": "This is the IP Range of the Server subnet."
+                "description": "This is the IP Range of the external (DMZ) subnet."
             }
         },
-        "routeTableName": {
-            "defaultValue": "RT-East-DMZ",
+        "subnetInternalName": {
+            "defaultValue": "InternalSubnet",
             "type": "String",
             "metadata": {
-                "description": "This is the route table used to route Server subnet traffic to Azure Firewall."
+                "description": "This is the subnet for the internal facing app service."
+            }
+        },
+        "subnetInternalIPRange": {
+            "defaultValue": "192.168.10.0/24",
+            "type": "String",
+            "metadata": {
+                "description": "This is the IP Range of the internal subnet."
             }
         },
         "azureFirewallName": {
@@ -72,14 +79,7 @@
             "defaultValue": "[resourceGroup().name]",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group where you will deploy your Azure Firewall."
-            }
-        },
-        "azureFirewallIPAddress": {
-            "defaultValue": "192.168.0.4",
-            "type": "String",
-            "metadata": {
-                "description": "This is the Azure Firewall IP Address. If you changed the AzureFirewallSubnet range, you must change this so its a member of the same range."
+                "description": "This is the Resource Group where your Azure Firewall is located."
             }
         },
         "azureFirewallPoliciesName": {
@@ -111,52 +111,57 @@
             }
         },
         "logAnalyticsResourceGroupName": {
-            "defaultValue": "[resourceGroup().name]",
+            "defaultValue": "ResourceGroupNameofLogAnalytics",
             "type": "String",
             "metadata": {
-                "description": "This is the Resource Group Name where you will deploy your Log Analytics Workspace."
+                "description": "This is the Resource Group Name where your Log Analytics Workspace located."
             }
         },
-        "virtualMachineName": {
-            "defaultValue": "VM-East-DMZ",
-            "type": "String",
+        "webAppServiceName": {
+            "type": "string",
+            "defaultValue": "webApp-AppService",
             "metadata": {
-                "description": "This is the test server's VM name."
+                "description": "Name of the Web App Service farm"
             }
         },
-        "networkInterfaceName": {
-            "defaultValue": "ni-vm-east-dmz",
-            "type": "String",
+        "webAppExternalName": {
+            "type": "string",
+            "defaultValue": "[format('webAppExternal-{0}', uniqueString(resourceGroup().id))]",
             "metadata": {
-                "description": "This is the name for the test server's NIC."
+                "description": "External Web App name must be unique DNS name worldwide"
             }
         },
-        "networkInterfaceIPaddress": {
-            "defaultValue": "192.168.0.68",
-            "type": "String",
+        "webAppInternalName": {
+            "type": "string",
+            "defaultValue": "[format('webAppInternal-{0}', uniqueString(resourceGroup().id))]",
             "metadata": {
-                "description": "This is the internal IP address for the test server."
+                "description": "Internal Web App name must be unique DNS name worldwide"
             }
         },
-        "publicIPVMName": {
-            "defaultValue": "PIP-VM-East-DMZ",
-            "type": "String",
+        "webAppSkuName": {
+            "type": "string",
+            "defaultValue": "P1v2",
+            "allowedValues": [
+                "P1v2",
+                "P2v2",
+                "P3v2"
+            ],
             "metadata": {
-                "description": "This is the public IP address name for the test server."
+                "description": "SKU, must be minimum P1v2"
             }
         },
-        "remoteIPAddressRDPToVM": {
-            "defaultValue": "173.66.214.116",
-            "type": "String",
+        "webAppPrivateEndpointName": {
+            "type": "string",
+            "defaultValue": "webAppInternalPrivateEndpoint",
             "metadata": {
-                "description": "This is your Public IP address or Range. This will allow you to RDP to the test server."
+                "description": "Name of your Private Endpoint"
             }
         },
-        "networkSecurityGroupName": {
-            "defaultValue": "NSG-VM-East-DMZ",
-            "type": "String",
+        "privateLinkConnectionName": {
+            "type": "string",
+            "defaultValue": "webAppInternalPrivateEndpointLink",
             "metadata": {
-                "description": "This is the network security group name."
+                "description": "Link name between your Private Endpoint and your Web App"
             }
         },
         "automationAccountName": {
@@ -180,8 +185,8 @@
                 "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
             }
         },
-        "baseTime": { 
-            "type": "string", 
+        "baseTime": {
+            "type": "string",
             "defaultValue": "[utcNow('u')]",
             "metadata": {
                 "description": "Schedule will start one hour from this time."
@@ -222,250 +227,220 @@
             "metadata": {
                 "description": "This is the email(s) that will receive the failure notification. Seperate with comma."
             }
-        },
-        "adminUsername": {
-            "defaultValue": "retroAdmin",
-            "type": "string",
-            "metadata": {
-                "description": "This is admin name for the test server."
-            }
-        },
-        "adminPassword": {
-            "type": "secureString",
-            "metadata": {
-                "description": "This is the admin password for the test server."
-            }
         }
     },
     "variables": {
-     },
+        "webAppDnsName": ".azurewebsites.net",
+        "privateDnsZoneName": "privatelink.azurewebsites.net",
+        "skuTier": "PremiumV2"
+    },
     "resources": [
-        {
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('networkSecurityGroupName')]",
-            "location": "[parameters('networkLocation')]",
-            "properties": {
-                "securityRules": [
-                    {
-                        "name": "RDP",
-                        "properties": {
-                            "protocol": "TCP",
-                            "sourcePortRange": "*",
-                            "destinationPortRange": "3389",
-                            "sourceAddressPrefix": "[parameters('remoteIPAddressRDPToVM')]",
-                            "destinationAddressPrefix": "*",
-                            "access": "Allow",
-                            "priority": 300,
-                            "direction": "Inbound",
-                            "sourcePortRanges": [],
-                            "destinationPortRanges": [],
-                            "sourceAddressPrefixes": [],
-                            "destinationAddressPrefixes": []
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('networkSecurityGroupName'), '/RDP')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
-            ],
-            "properties": {
-                "protocol": "TCP",
-                "sourcePortRange": "*",
-                "destinationPortRange": "3389",
-                "sourceAddressPrefix": "[parameters('remoteIPAddressRDPToVM')]", 
-                "destinationAddressPrefix": "*",
-                "access": "Allow",
-                "priority": 300,
-                "direction": "Inbound",
-                "sourcePortRanges": [],
-                "destinationPortRanges": [],
-                "sourceAddressPrefixes": [],
-                "destinationAddressPrefixes": []
-            }
-        },
-        {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('publicIPVMName')]",
-            "location": "[parameters('networkLocation')]",
-            "sku": {
-                "name": "Standard",
-                "tier": "Regional"
-            },
-            "zones": [
-                "2"
-            ],
-            "properties": {
-                "publicIPAddressVersion": "IPv4",
-                "publicIPAllocationMethod": "Static",
-                "idleTimeoutInMinutes": 4,
-                "ipTags": []
-            }
-        },
-        {
-            "type": "Microsoft.Network/routeTables",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('routeTableName')]",
-            "location": "[parameters('networkLocation')]",
-            "properties": {
-                "disableBgpRoutePropagation": false,
-                "routes": [
-                    {
-                        "name": "Internet",
-                        "properties": {
-                            "addressPrefix": "0.0.0.0/0",
-                            "nextHopType": "VirtualAppliance",
-                            "nextHopIpAddress": "[parameters('azureFirewallIPAddress')]",
-                            "hasBgpOverride": false
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "type": "Microsoft.Network/routeTables/routes",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('routeTableName'), '/Internet')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
-            ],
-            "properties": {
-                "addressPrefix": "0.0.0.0/0",
-                "nextHopType": "VirtualAppliance",
-                "nextHopIpAddress": "[parameters('azureFirewallIPAddress')]",
-                "hasBgpOverride": false
-            }
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines",
-            "apiVersion": "2021-07-01",
-            "name": "[parameters('virtualMachineName')]",
-            "location": "[parameters('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
-            ],
-            "zones": [
-                "2"
-            ],
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "hardwareProfile": {
-                    "vmSize": "Standard_D2s_v5"
-                },
-                "storageProfile": {
-                    "imageReference": {
-                        "publisher": "MicrosoftWindowsServer",
-                        "offer": "WindowsServer",
-                        "sku": "2022-datacenter-azure-edition",
-                        "version": "latest"
-                    },
-                    "osDisk": {
-                        "osType": "Windows",
-                        "name": "[concat(parameters('virtualMachineName'), '_OsDisk_1_',parameters('virtualMachineName'))]",
-                        "createOption": "FromImage",
-                        "caching": "ReadWrite",
-                        "managedDisk": {
-                            "storageAccountType": "Premium_LRS"
-                        },
-                        "deleteOption": "Detach",
-                        "diskSizeGB": 127
-                    },
-                    "dataDisks": []
-                },
-                "osProfile": {
-                    "computerName": "[parameters('virtualMachineName')]",
-                    "adminUsername": "[parameters('adminUsername')]",
-                    "adminPassword": "[parameters('adminPassword')]",
-                    "windowsConfiguration": {
-                        "provisionVMAgent": true,
-                        "enableAutomaticUpdates": true,
-                        "patchSettings": {
-                            "patchMode": "AutomaticByOS",
-                            "assessmentMode": "ImageDefault",
-                            "enableHotpatching": false
-                        }
-                    },
-                    "secrets": [],
-                    "allowExtensionOperations": true
-                },
-                "networkProfile": {
-                    "networkInterfaces": [
-                        {
-                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaceName'))]"
-                        }
-                    ]
-                },
-                "diagnosticsProfile": {
-                    "bootDiagnostics": {
-                        "enabled": true
-                    }
-                },
-                "licenseType": "Windows_Server"
-            }
-        },
-        {
-            "type": "Microsoft.Network/networkInterfaces",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('networkInterfaceName')]",
-            "location": "[parameters('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPVMName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetServerName'))]",
-                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
-            ],
-            "properties": {
-                "ipConfigurations": [
-                    {
-                        "name": "ipconfig1",
-                        "properties": {
-                            "privateIPAddress": "[parameters('networkInterfaceIPaddress')]",
-                            "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPVMName'))]"
-                            },
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetServerName'))]"
-                            },
-                            "primary": true,
-                            "privateIPAddressVersion": "IPv4"
-                        }
-                    }
-                ],
-                "dnsSettings": {
-                    "dnsServers": []
-                },
-                "enableAcceleratedNetworking": true,
-                "enableIPForwarding": false,
-                "networkSecurityGroup": {
-                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroupName'))]"
-                }
-            }
-        },
         {
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetServerName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
-            ],
+            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetExternalName'))]",
+            "dependsOn": [],
             "properties": {
-                "addressPrefix": "[parameters('subnetServerIPRange')]",
-                "routeTable": {
-                    "id": "[resourceId('Microsoft.Network/routeTables', parameters('routeTableName'))]"
-                },
+                "addressPrefix": "[parameters('subnetExternalIPRange')]",
                 "serviceEndpoints": [],
                 "delegations": [],
                 "privateEndpointNetworkPolicies": "Enabled",
                 "privateLinkServiceNetworkPolicies": "Enabled"
             }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetInternalName'))]",
+            "dependsOn": [],
+            "properties": {
+                "addressPrefix": "[parameters('subnetInternalIPRange')]",
+                "serviceEndpoints": [],
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('webAppServiceName')]",
+            "location": "[parameters('networkLocation')]",
+            "sku": {
+                "name": "[parameters('webAppSkuName')]",
+                "tier": "[variables('skuTier')]",
+                "size": "[parameters('webAppSkuName')]",
+                "family": "[parameters('webAppSkuName')]",
+                "capacity": 1
+            },
+            "kind": "app",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('webAppExternalName')]",
+            "location": "[parameters('networkLocation')]",
+            "kind": "app",
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('webAppServiceName'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('webAppServiceName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('webAppInternalName')]",
+            "location": "[parameters('networkLocation')]",
+            "kind": "app",
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('webAppServiceName'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('webAppServiceName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', parameters('webAppExternalName'), 'appsettings')]",
+            "properties": {
+                "WEBSITE_DNS_SERVER": "168.63.129.16",
+                "WEBSITE_VNET_ROUTE_ALL": "1"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppExternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', parameters('webAppInternalName'), 'web')]",
+            "properties": {
+                "ftpsState": "AllAllowed"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppInternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', parameters('webAppExternalName'), 'web')]",
+            "properties": {
+                "ftpsState": "AllAllowed"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppExternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2019-08-01",
+            "name": "[format('{0}/{1}', parameters('webAppInternalName'), format('{0}{1}', parameters('webAppInternalName'), variables('webAppDnsName')))]",
+            "properties": {
+                "siteName": "[parameters('webAppInternalName')]",
+                "hostNameType": "Verified"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppInternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2019-08-01",
+            "name": "[format('{0}/{1}', parameters('webAppExternalName'), format('{0}{1}', parameters('webAppExternalName'), variables('webAppDnsName')))]",
+            "properties": {
+                "siteName": "[parameters('webAppExternalName')]",
+                "hostNameType": "Verified"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webAppExternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/networkConfig",
+            "apiVersion": "2020-06-01",
+            "name": "[format('{0}/{1}', parameters('webAppExternalName'), 'virtualNetwork')]",
+            "properties": {
+                "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetExternalName'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetExternalName'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('webAppExternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-06-01",
+            "name": "[parameters('webAppPrivateEndpointName')]",
+            "location": "[parameters('networkLocation')]",
+            "properties": {
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetInternalName'))]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[parameters('privateLinkConnectionName')]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', parameters('webAppInternalName'))]",
+                            "groupIds": [
+                                "sites"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetInternalName'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('webAppInternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[variables('privateDnsZoneName')]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2018-09-01",
+            "name": "[format('{0}/{1}', variables('privateDnsZoneName'), format('{0}-link', variables('privateDnsZoneName')))]",
+            "location": "global",
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2020-03-01",
+            "name": "[format('{0}/{1}', parameters('webAppPrivateEndpointName'), 'dnsgroupname')]",
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "config1",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
+                "[resourceId('Microsoft.Network/privateEndpoints', parameters('webAppPrivateEndpointName'))]"
+            ]
         },
         {
             "type": "Microsoft.Resources/deployments",
@@ -524,7 +499,7 @@
                     "scheduleName": {
                         "value": "[parameters('scheduleName')]"
                     },
-                    "baseTime": { 
+                    "baseTime": {
                         "value": "[parameters('baseTime')]"
                     },
                     "runbookName": {
@@ -542,7 +517,7 @@
                     "failedRunbookAlertEmail": {
                         "value": "[parameters('failedRunbookAlertEmail')]"
                     }
-                }   
+                }
             }
         }
     ]

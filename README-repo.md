@@ -107,3 +107,6 @@ An Azure alert is deployed and configured to send an failure email notification,
 
 - [Firewall, App Gateway for virtual networks - Azure Example Scenarios | Microsoft Docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/gateway/firewall-application-gateway)
 - [azure-docs/quickstart-arm-template.md at master · MicrosoftDocs/azure-docs (github.com)](https://github.com/MicrosoftDocs/azure-docs/blob/master/articles/app-service/quickstart-arm-template.md)
+- [Quickstart: Assign an Azure role using an Azure Resource Manager template - Azure RBAC | Microsoft Docs](https://docs.microsoft.com/en-us/azure/role-based-access-control/quickstart-role-assignments-template)
+- [Microsoft.Automation/automationAccounts/schedules - Bicep & ARM template reference | Microsoft Docs](https://docs.microsoft.com/en-us/azure/templates/microsoft.automation/automationaccounts/schedules?tabs=json)
+- [Microsoft.Automation/automationAccounts/jobSchedules - Bicep & ARM template reference | Microsoft Docs](https://docs.microsoft.com/en-us/azure/templates/microsoft.automation/automationaccounts/jobschedules?tabs=json)
