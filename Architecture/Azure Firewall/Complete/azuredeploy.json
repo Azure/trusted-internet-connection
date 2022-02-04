@@ -368,6 +368,7 @@
                 "subnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetExternalName'))]"
             },
             "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetExternalName'))]",
                 "[resourceId('Microsoft.Web/sites', parameters('webAppExternalName'))]"
             ]
@@ -394,6 +395,7 @@
                 ]
             },
             "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworksName'), parameters('subnetInternalName'))]",
                 "[resourceId('Microsoft.Web/sites', parameters('webAppInternalName'))]"
             ]
