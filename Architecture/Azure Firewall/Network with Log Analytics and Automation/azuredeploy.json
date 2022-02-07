@@ -47,7 +47,7 @@
                 "description": "This is the Azure Firewall name."
             }
         },
-        "azureFirewallNameResourceGroup": {
+        "azureFirewallResourceGroupName": {
             "defaultValue": "[resourceGroup().name]",
             "type": "String",
             "metadata": {
@@ -317,8 +317,8 @@
                     "azureFirewallName": {
                         "value": "[parameters('azureFirewallName')]"
                     },
-                    "azureFirewallNameResourceGroup": {
-                        "value": "[parameters('azureFirewallNameResourceGroup')]"
+                    "azureFirewallResourceGroupName": {
+                        "value": "[parameters('azureFirewallResourceGroupName')]"
                     },
                     "logAnalyticsWorkspaceName": {
                         "value": "[parameters('logAnalyticsWorkspaceName')]"
