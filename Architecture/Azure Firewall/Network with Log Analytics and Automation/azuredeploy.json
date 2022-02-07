@@ -265,17 +265,7 @@
                         "[parameters('virtualNetworksIPRange')]"
                     ]
                 },
-                "subnets": [
-                    {
-                        "name": "[parameters('subnetFirewallName')]",
-                        "properties": {
-                            "addressPrefix": "[parameters('subnetFirewallIPRange')]",
-                            "delegations": [],
-                            "privateEndpointNetworkPolicies": "Enabled",
-                            "privateLinkServiceNetworkPolicies": "Enabled"
-                        }
-                    }
-                ],
+                "subnets": [],
                 "virtualNetworkPeerings": [],
                 "enableDdosProtection": false
             }
