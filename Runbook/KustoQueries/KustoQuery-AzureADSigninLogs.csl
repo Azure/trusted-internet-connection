@@ -1,9 +1,16 @@
 SigninLogs 
-    | where TimeGenerated > ago(60m) 
+    | where TimeGenerated > ago(30m) 
     | project 
+        Category,
+        TimeGenerated,
+        OperationName,
         UserDisplayName,
         Identity,
         UserPrincipalName,
         AppDisplayName,
         AppId,
-        ResourceDisplayName
+        ResourceDisplayName,
+        AuthenticationDetails,
+        AuthenticationProcessingDetails,
+        ConditionalAccessPolicies,
+        DeviceDetail

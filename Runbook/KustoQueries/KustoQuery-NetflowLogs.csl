@@ -1,23 +1,41 @@
+let Category = "NetFlow"; 
 AzureNetworkAnalytics_CL
     | where SubType_s == 'FlowLog'
         and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
-    | where TimeGenerated > ago(60m) 
+    | where TimeGenerated > ago(30m) 
     | extend VMFields  = split(VM1_s, '/')
     | extend VMName  = tostring(VMFields[1]) 
+    | extend FlowType = tostring(FlowType_s), 
+        SourceIP = tostring(SrcIP_s),
+        TargetIP = tostring(DestIP_s),
+        TartgetPort = tostring(DestPort_d),
+        L4Protocol = tostring(L4Protocol_s),
+        L7Protocol = tostring(L7Protocol_s),
+        FlowDirection = tostring(FlowDirection_s),
+        AllowedOutFlows = tostring(AllowedOutFlows_d),
+        DeniedOutFlows = tostring(DeniedOutFlows_d),
+        OutboundBytes = tostring(OutboundBytes_d),
+        InboundBytes = tostring(InboundBytes_d),
+        OutboundPackets = tostring(OutboundPackets_d),
+        InboundPackets = tostring(InboundPackets_d),
+        AzureRegion = tostring(AzureRegion_s),
+        Region = tostring(Region1_s)
     | project
-        TimeProcessed_t,
-        SrcIP_s,
+        Category,
+        TimeGenerated,
         VMName,
-        FlowDirection_s,
-        L4Protocol_s,
-        L7Protocol_s,
-        DestPort_d,
-        FlowType_s,
-        AllowedOutFlows_d,
-        DeniedOutFlows_d,
-        OutboundBytes_d,
-        InboundBytes_d,
-        OutboundPackets_d,
-        InboundPackets_d,
-        AzureRegion_s,
-        Region1_s
+        FlowDirection,
+        FlowType,
+        SourceIP,
+        TargetIP,
+        TartgetPort,
+        L4Protocol,
+        L7Protocol,
+        AllowedOutFlows,
+        DeniedOutFlows,
+        OutboundBytes,
+        InboundBytes,
+        OutboundPackets,
+        InboundPackets,
+        AzureRegion,
+        Region

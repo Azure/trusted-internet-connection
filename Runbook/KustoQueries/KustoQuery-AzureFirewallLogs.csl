@@ -1,6 +1,6 @@
 AzureDiagnostics 
     | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
-    | where TimeGenerated > ago(60m) 
+    | where TimeGenerated > ago(30m) 
     | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
     | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
     | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
@@ -12,6 +12,7 @@ AzureDiagnostics
         SourcePort = case(SourcePort == '', 'N/A', SourcePort),
         TargetPort = case(TargetPort == '', 'N/A', TargetPort)
     | project 
+        Category,
         TimeGenerated,
         Protocol,
         SourceIP,
