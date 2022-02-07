@@ -255,7 +255,9 @@
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2020-11-01",
             "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetExternalName'))]",
-            "dependsOn": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+            ],
             "properties": {
                 "addressPrefix": "[parameters('subnetExternalIPRange')]",
                 "serviceEndpoints": [],
@@ -268,7 +270,9 @@
             "type": "Microsoft.Network/virtualNetworks/subnets",
             "apiVersion": "2020-11-01",
             "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetInternalName'))]",
-            "dependsOn": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+            ],
             "properties": {
                 "addressPrefix": "[parameters('subnetInternalIPRange')]",
                 "serviceEndpoints": [],
