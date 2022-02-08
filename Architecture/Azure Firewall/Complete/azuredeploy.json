@@ -231,7 +231,7 @@
     },
     "variables": {
         "webAppDnsName": ".azurewebsites.net",
-        "privateDnsZoneName": "privatelink.azurewebsites.net",
+        "privateDnsZoneName": "tic.privatelink.azurewebsites.net",
         "skuTier": "PremiumV2"
     },
     "resources": [
@@ -246,44 +246,91 @@
                         "[parameters('virtualNetworksIPRange')]"
                     ]
                 },
-                "subnets": [],
-                "virtualNetworkPeerings": [],
-                "enableDdosProtection": false
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetExternalName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
-            ],
-            "properties": {
-                "addressPrefix": "[parameters('subnetExternalIPRange')]",
-                "serviceEndpoints": [],
-                "delegations": [
-                  {
-                    "name": "delegation",
-                    "properties": {
-                      "serviceName": "Microsoft.Web/serverfarms"
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetInternalName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetInternalIPRange')]",
+                            "privateEndpointNetworkPolicies": "Disabled"
+                        }
+                    },
+                    {
+                        "name": "[parameters('subnetExternalName')]",
+                        "properties": {
+                            "addressPrefix": "[parameters('subnetExternalIPRange')]",
+                            "delegations": [
+                                {
+                                    "name": "delegation",
+                                    "properties": {
+                                        "serviceName": "Microsoft.Web/serverfarms"
+                                    }
+                                }
+                            ],
+                            "privateEndpointNetworkPolicies": "Enabled"
+                        }
                     }
-                  }
-                ],
-                "privateEndpointNetworkPolicies": "Enabled"
+                ]
             }
         },
         {
-            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "type": "Microsoft.Network/firewallPolicies",
             "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('virtualNetworksName'), '/', parameters('subnetInternalName'))]",
+            "name": "[parameters('azureFirewallPoliciesName')]",
+            "location": "[parameters('networkLocation')]",
+            "properties": {
+                "sku": {
+                    "tier": "Premium"
+                },
+                "threatIntelMode": "Alert",
+                "intrusionDetection": {
+                    "mode": "Alert"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(parameters('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
+            "location": "[parameters('networkLocation')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName'))]"
+                "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]",
+                "[resourceId('Microsoft.Network/privateEndpoints', parameters('webAppPrivateEndpointName'))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))]"
             ],
             "properties": {
-                "addressPrefix": "[parameters('subnetInternalIPRange')]",
-                "serviceEndpoints": [],
-                "delegations": [],
-                "privateEndpointNetworkPolicies": "Disabled"
+                "priority": 100,
+                "ruleCollections": [
+                    {
+                        "ruleCollectionType": "FirewallPolicyNatRuleCollection",
+                        "action": {
+                            "type": "Dnat"
+                        },
+                        "rules": [
+                            {
+                                "ruleType": "NatRule",
+                                "name": "webApp-Inbound",
+                                "translatedAddress": "[reference(resourceId('Microsoft.Network/networkInterfaces', parameters('webAppPrivateEndpointName'))).IPv4]",
+                                "translatedPort": "443",
+                                "ipProtocols": [
+                                    "TCP",
+                                    "UDP"
+                                ],
+                                "sourceAddresses": [
+                                    "*"
+                                ],
+                                "sourceIpGroups": [],
+                                "destinationAddresses": [
+                                    "[reference(resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAzureFirewallName'))).IPv4]"
+                                ],
+                                "destinationPorts": [
+                                    "5443"
+                                ]
+                            }
+                        ],
+                        "name": "DnatRule",
+                        "priority": 150
+                    }
+                ]
             }
         },
         {

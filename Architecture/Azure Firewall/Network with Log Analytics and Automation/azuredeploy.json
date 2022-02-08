@@ -197,64 +197,6 @@
             }
         },
         {
-            "type": "Microsoft.Network/firewallPolicies",
-            "apiVersion": "2020-11-01",
-            "name": "[parameters('azureFirewallPoliciesName')]",
-            "location": "[parameters('networkLocation')]",
-            "properties": {
-                "sku": {
-                    "tier": "Premium"
-                },
-                "threatIntelMode": "Alert",
-                "intrusionDetection": {
-                    "mode": "Alert"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(parameters('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
-            "location": "[parameters('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/firewallPolicies', parameters('azureFirewallPoliciesName'))]"
-            ],
-            "properties": {
-                "priority": 200,
-                "ruleCollections": [
-                    {
-                        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-                        "action": {
-                            "type": "Allow"
-                        },
-                        "rules": [
-                            {
-                                "ruleType": "NetworkRule",
-                                "name": "AllTraffic",
-                                "ipProtocols": [
-                                    "Any"
-                                ],
-                                "sourceAddresses": [
-                                    "[parameters('virtualNetworksIPRange')]"
-                                ],
-                                "sourceIpGroups": [],
-                                "destinationAddresses": [
-                                    "*"
-                                ],
-                                "destinationIpGroups": [],
-                                "destinationFqdns": [],
-                                "destinationPorts": [
-                                    "*"
-                                ]
-                            }
-                        ],
-                        "name": "DefaultNetworkRule",
-                        "priority": 150
-                    }
-                ]
-            }
-        },
-        {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
             "condition": "[empty(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName')))]",
