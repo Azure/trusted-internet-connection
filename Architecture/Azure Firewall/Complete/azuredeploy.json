@@ -238,6 +238,7 @@
         {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
+            "condition": "[empty(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName')))]",
             "name": "[parameters('virtualNetworksName')]",
             "location": "[parameters('networkLocation')]",
             "properties": {
@@ -261,7 +262,14 @@
             "properties": {
                 "addressPrefix": "[parameters('subnetExternalIPRange')]",
                 "serviceEndpoints": [],
-                "delegations": [],
+                "delegations": [
+                  {
+                    "name": "delegation",
+                    "properties": {
+                      "serviceName": "Microsoft.Web/serverfarms"
+                    }
+                  }
+                ],
                 "privateEndpointNetworkPolicies": "Enabled",
                 "privateLinkServiceNetworkPolicies": "Enabled"
             }
@@ -277,7 +285,7 @@
                 "addressPrefix": "[parameters('subnetInternalIPRange')]",
                 "serviceEndpoints": [],
                 "delegations": [],
-                "privateEndpointNetworkPolicies": "Enabled",
+                "privateEndpointNetworkPolicies": "Disabled",
                 "privateLinkServiceNetworkPolicies": "Enabled"
             }
         },
