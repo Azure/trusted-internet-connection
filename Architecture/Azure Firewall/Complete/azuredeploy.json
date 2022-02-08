@@ -269,7 +269,7 @@
                     }
                   }
                 ],
-                "privateEndpointNetworkPolicies": "Enabled",
+                "privateEndpointNetworkPolicies": "Enabled"
             }
         },
         {
@@ -283,7 +283,7 @@
                 "addressPrefix": "[parameters('subnetInternalIPRange')]",
                 "serviceEndpoints": [],
                 "delegations": [],
-                "privateEndpointNetworkPolicies": "Disabled",
+                "privateEndpointNetworkPolicies": "Disabled"
             }
         },
         {
