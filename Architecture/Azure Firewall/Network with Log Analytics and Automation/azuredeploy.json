@@ -257,6 +257,7 @@
         {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
+            "condition": "[empty(resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworksName')))]",
             "name": "[parameters('virtualNetworksName')]",
             "location": "[parameters('networkLocation')]",
             "properties": {
