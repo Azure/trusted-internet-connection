@@ -3,10 +3,10 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "1.1.0.0",
+            "defaultValue": "20220209.1311",
             "type": "String",
             "allowedValues": [
-                "1.1.0.0"
+                "20220209.1311"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
