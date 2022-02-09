@@ -32,7 +32,7 @@
                 "description": "Name will be used to create Azure Resources"
             }
         },
-        "AppFrontEndInternalIPAddress": {
+        "appFrontEndInternalIPAddress": {
             "type": "string",
             "defaultValue": "0.0.0.0",
             "metadata": {
@@ -55,7 +55,6 @@
         }
     },
     "variables": {
-        "webAppDnsName": ".azurewebsites.net",
         "networkLocation": "[resourceGroup().location]",
         "webAppUniqueName": "[format('{0}-{1}', parameters('azureResourcePrependName'), uniqueString(resourceGroup().id))]",
         "virtualNetworkName": "[concat('VNET-', variables('webAppUniqueName'))]",
@@ -178,7 +177,7 @@
                             {
                                 "ruleType": "NatRule",
                                 "name": "[variables('azureFirewallPolicyRuleName')]",
-                                "translatedAddress": "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]",
+                                "translatedAddress": "[parameters('appFrontEndInternalIPAddress')]",
                                 "translatedPort": "443",
                                 "ipProtocols": [
                                     "TCP"
