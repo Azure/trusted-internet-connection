@@ -69,7 +69,7 @@
         "publicIPAzureFirewallName": "[concat('PIP-AzFw-', variables('webAppUniqueName'))]",
         "logAnalyticsWorkspaceName": "[concat('LAW-', variables('webAppUniqueName'))]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
-        "scheduleName": "HourlyUploadsToCLAW",
+        "scheduleName": "UploadAzureFirewallLogs",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
