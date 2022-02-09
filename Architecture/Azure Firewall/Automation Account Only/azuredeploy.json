@@ -2,6 +2,23 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "templateVersion": {
+            "defaultValue": "20220209.1414",
+            "type": "String",
+            "allowedValues": [
+                "20220209.1414"
+            ],
+            "metadata": {
+                "description": "This is the version of the template you are running."
+            }
+        },
+        "azureResourcePrependName": {
+            "type": "string",
+            "defaultValue": "tic30",
+            "metadata": {
+                "description": "Name will be used to create Azure Resources"
+            }
+        },
         "azureFirewallName": {
             "defaultValue": "TheNameofYourAzureFirewall",
             "type": "String",
@@ -30,84 +47,57 @@
                 "description": "This is the Resource Group Name where your Log Analytics Workspace located."
             }
         },
-        "automationAccountName": {
-            "defaultValue": "AA-UploadLogsToCLAW",
-            "type": "String",
-            "metadata": {
-                "description": "This is the Automation account name. This will be used to execute a runbook that will collect logs and send them to the CLAW."
-            }
-        },
-        "automationAccountLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where your Automation account will deploy."
-            }
-        },
-        "scheduleName": {
-            "defaultValue": "HourlyUploadsToCLAW",
-            "type": "String",
-            "metadata": {
-                "description": "This is automation account schedule name. This will be used to initiate the runbook ever hour on the hour."
-            }
-        },
-        "scheduleCount": {
-            "type": "int",
-            "defaultValue": 5
-        },
-        "baseTime": { 
-            "type": "string", 
-            "defaultValue": "[utcNow('u')]",
-            "metadata": {
-                "description": "Schedule will start one hour from this time."
-            }
-        },
-        "runbookName": {
-            "defaultValue": "UploadsToCLAWS3",
-            "type": "String",
-            "metadata": {
-                "description": "This is the automation account runbook name. The runbook is pulled from github and published as this name."
-            }
-        },
-        "runbookUri": {
-            "defaultValue": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
-            "type": "String",
-            "metadata": {
-                "description": "DO NOT CHANGE, unless you know what you are doing. This is the github location of the runbook."
-            }
-        },
-        "diagSettingsName": {
-            "defaultValue": "SendToWorkspace",
-            "type": "String",
-            "metadata": {
-                "description": "This is the diagnostic settings in the Firewall that will send logs to the Log Analytics Workspace."
-            }
-        },
-        "actionGroupName": {
-            "defaultValue": "FailureEmail",
-            "type": "string",
-            "maxLength": 12,
-            "metadata": {
-                "description": "This is the action group in Azure Alert that will email you if the runbook fails to send logs to the CLAW."
-            }
-        },
         "failedRunbookAlertEmail": {
             "defaultValue": "first.last@mail.com",
             "type": "string",
             "metadata": {
-                "description": "This is the email that will receive the failure notification. Only one email can be used."
+                "description": "This is the email that will receive the failure notification."
+            }
+        },
+        "baseTime": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]",
+            "metadata": {
+                "description": "Schedule will start one hour from this time."
             }
         }
     },
     "variables": {
-        "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]"
-     },
+        "networkLocation": "[resourceGroup().location]",
+        "webAppUniqueName": "[format('{0}-{1}', parameters('azureResourcePrependName'), uniqueString(resourceGroup().id))]",
+        "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
+        "scheduleName": "HourlyUploadsToCLAW",
+        "scheduleCount": 5,
+        "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
+        "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
+        "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
+        "diagSettingsName": "[concat('SendtoWorkspace-', variables('webAppUniqueName'))]",
+        "actionGroupName": "FailureEmail",
+        "tenantIdObject": {
+            "value": "[subscription().tenantId]",
+            "type": "object"
+        },
+        "tenantId": "[variables('tenantIdObject').value]",
+        "logAnalyticsReaderRoleId": "73c42c96-874c-492b-b04d-ab87d138a893"
+    },
     "resources": [
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2021-04-01-preview",
+            "name": "[guid(variables('automationAccountName'))]",
+            "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('logAnalyticsReaderRoleId'))]",
+                "principalId": "[reference(resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName')), '2021-06-22', 'Full').identity.principalId]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
+            ]
+        },
         {
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
-            "name": "[parameters('automationAccountName')]",
-            "location": "[parameters('automationAccountLocation')]",
+            "name": "[variables('automationAccountName')]",
+            "location": "[variables('networkLocation')]",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -125,9 +115,9 @@
         {
             "type": "Microsoft.Automation/automationAccounts/modules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/AWSPowerShell')]",
+            "name": "[concat(variables('automationAccountName'), '/AWSPowerShell')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "contentLink": {
@@ -138,10 +128,10 @@
         {
             "type": "Microsoft.Automation/automationAccounts/runbooks",
             "apiVersion": "2019-06-01",
-            "name": "[concat(parameters('automationAccountName'), '/' , parameters('runbookName'))]",
-            "location": "[parameters('automationAccountLocation')]",
+            "name": "[concat(variables('automationAccountName'), '/' , variables('runbookName'))]",
+            "location": "[variables('networkLocation')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "runbookType": "PowerShell",
@@ -149,35 +139,98 @@
                 "logProgress": false,
                 "logActivityTrace": 0,
                 "publishContentLink": {
-                    "uri": "[parameters('runbookUri')]"
-                    }
+                    "uri": "[variables('runbookUri')]"
+                }
             }
         },
         {
             "type": "Microsoft.Automation/automationAccounts/schedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/', parameters('scheduleName'), '-', copyIndex())]",
+            "name": "[concat(variables('automationAccountName'), '/', variables('scheduleName'), '-', copyIndex())]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
-                "startTime": "[variables('startTime')]",
+                "startTime": "[dateTimeAdd(variables('startTime'), concat('PT', mul(copyIndex(), 30) ,'M'))]",
                 "interval": 1,
                 "frequency": "Hour",
                 "timeZone": "America/New_York"
             },
             "copy": {
                 "name": "scheduleCount",
-                "count": "[parameters('scheduleCount')]"
+                "count": "[variables('scheduleCount')]"
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
+            "properties": {
+                "parameters": {},
+                "runbook": {
+                    "name": "[variables('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[concat(variables('scheduleName'), '-0')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-0'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "properties": {
+                "parameters": {},
+                "runbook": {
+                    "name": "[variables('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[concat(variables('scheduleName'), '-1')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/TenantId')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
+            ],
+            "properties": {
+                "description": "This is the Tenant ID from Azure AD. Initially populated from Deployment ARM Template.",
+                "value": "[concat('\"',variables('tenantId'),'\"')]"
             }
         },
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/AWSAccessKey')]",
+            "name": "[concat(variables('automationAccountName'), '/LogAnalyticWorkspaceID')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]"
+            ],
+            "properties": {
+                "description": "Log Analytics Workspace where the Azure Firewall sends its diagnostic logs. Initially populated from Deployment ARM Template.",
+                "value": "[concat('\"',reference(resourceId('Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))).customerId,'\"')]"
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/AWSAccessKey')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "isEncrypted": true,
@@ -187,9 +240,9 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/AWSSecretKey')]",
+            "name": "[concat(variables('automationAccountName'), '/AWSSecretKey')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "isEncrypted": true,
@@ -199,45 +252,9 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/EnterpriseApplicationId')]",
+            "name": "[concat(variables('automationAccountName'), '/S3BucketName')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Register a new Enterprise Application and collect the Enterprise Application ID for this variable"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/EnterpriseApplicationSecret')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Create this variable from the cert & secrets pane for the Enterprise Application. This is typically valid for 6 months but could be valid up to 24 months."
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/LogAnalyticWorkspaceID')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Log Analytics Workspace where the Azure Firewall sends its diagnostic logs."
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/S3BucketName')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
                 "isEncrypted": true,
@@ -245,24 +262,12 @@
             }
         },
         {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(parameters('automationAccountName'), '/TenantId')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "This is the Tenant ID from Azure AD"
-            }
-        },
-        {
             "type": "microsoft.insights/actionGroups",
             "apiVersion": "2021-09-01",
-            "name": "[parameters('actionGroupName')]",
+            "name": "[variables('actionGroupName')]",
             "location": "Global",
             "properties": {
-                "groupShortName": "[parameters('actionGroupName')]",
+                "groupShortName": "[variables('actionGroupName')]",
                 "enabled": true,
                 "emailReceivers": [
                     {
@@ -289,14 +294,14 @@
             "name": "Failed Runbook Job",
             "location": "global",
             "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]",
-                "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]"
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('microsoft.insights/actionGroups', variables('actionGroupName'))]"
             ],
             "properties": {
                 "severity": 0,
                 "enabled": true,
                 "scopes": [
-                    "[resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName'))]"
+                    "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
                 ],
                 "evaluationFrequency": "PT1M",
                 "windowSize": "PT5M",
@@ -325,10 +330,10 @@
                 },
                 "autoMitigate": false,
                 "targetResourceType": "Microsoft.Automation/automationAccounts",
-                "targetResourceRegion": "[parameters('automationAccountLocation')]",
+                "targetResourceRegion": "[variables('networkLocation')]",
                 "actions": [
                     {
-                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroupName'))]",
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', variables('actionGroupName'))]",
                         "webHookProperties": {}
                     }
                 ]
@@ -346,43 +351,43 @@
                     "contentVersion": "1.0.0.0",
                     "resources": [
                         {
-                            "type":"Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
-                            "name":"[concat(parameters('azureFirewallName'),'/microsoft.insights/', parameters('diagSettingsName'))]",
-                            "apiVersion":"2021-05-01-preview",
+                            "type": "Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
+                            "name": "[concat(parameters('azureFirewallName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+                            "apiVersion": "2021-05-01-preview",
                             "dependsOn": [],
-                            "properties":{
-                                "name":"DiagService",
-                                "storageAccountId":null,
-                                "eventHubAuthorizationRuleId":null,
-                                "eventHubName":null,
-                                "workspaceId":"[resourceId(parameters('logAnalyticsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
-                                "logs":[
-                                {
-                                    "category":"AzureFirewallApplicationRule",
-                                    "enabled":true,
-                                    "retentionPolicy":{
-                                        "days":10,
-                                        "enabled":false
+                            "properties": {
+                                "name": "DiagService",
+                                "storageAccountId": null,
+                                "eventHubAuthorizationRuleId": null,
+                                "eventHubName": null,
+                                "workspaceId": "[resourceId(parameters('logAnalyticsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
+                                "logs": [
+                                    {
+                                        "category": "AzureFirewallApplicationRule",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    },
+                                    {
+                                        "category": "AzureFirewallNetworkRule",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
                                     }
-                                },
-                                {
-                                    "category":"AzureFirewallNetworkRule",
-                                    "enabled":true,
-                                    "retentionPolicy":{
-                                        "days":10,
-                                        "enabled":false
-                                    }
-                                }
                                 ],
-                                "metrics":[
-                                {
-                                    "category":"AllMetrics",
-                                    "enabled":true,
-                                    "retentionPolicy":{
-                                        "enabled":false,
-                                        "days":0
+                                "metrics": [
+                                    {
+                                        "category": "AllMetrics",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "enabled": false,
+                                            "days": 0
+                                        }
                                     }
-                                }
                                 ]
                             }
                         }
