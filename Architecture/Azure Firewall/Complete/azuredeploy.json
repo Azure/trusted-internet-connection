@@ -3,10 +3,10 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "1.0.0.0",
+            "defaultValue": "1.1.0.0",
             "type": "String",
             "allowedValues": [
-                "1.0.0.0"
+                "1.1.0.0"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
@@ -20,7 +20,7 @@
                 "10.0.0.0/16",
                 "10.10.0.0/16",
                 "10.100.0.0/16"
-                ],
+            ],
             "metadata": {
                 "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
             }
@@ -54,10 +54,10 @@
         "webAppUniqueName": "[format('{0}-{1}', parameters('webAppName'), uniqueString(resourceGroup().id))]",
         "privateDnsZoneName": "[concat(variables('webAppUniqueName'),'.privatelink.azurewebsites.net')]",
         "virtualNetworkName": "[concat('VNET-', variables('webAppUniqueName'))]",
-        "IPBase" : "[split(parameters('virtualNetworkIPRange'),'.')]",
+        "IPBase": "[split(parameters('virtualNetworkIPRange'),'.')]",
         "subnetFirewallName": "AzureFirewallSubnet",
         "subnetFirewallIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '0', '0', '26')]",
-        "subnetInternalName":"InternalSubnet",
+        "subnetInternalName": "InternalSubnet",
         "subnetInternalIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '10', '0', '26')]",
         "azureFirewallName": "[concat('AzFW-', variables('webAppUniqueName'))]",
         "azureFirewallPoliciesName": "[concat('AzFwP-', variables('webAppUniqueName'))]",
@@ -136,6 +136,91 @@
                 "idleTimeoutInMinutes": 4,
                 "ipTags": []
             }
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('webAppInternalPrivateEndpointName')]",
+            "location": "[variables('networkLocation')]",
+            "properties": {
+                "subnet": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]"
+                },
+                "privateLinkServiceConnections": [
+                    {
+                        "name": "[variables('privateLinkConnectionName')]",
+                        "properties": {
+                            "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', variables('webAppInternalName'))]",
+                            "groupIds": [
+                                "sites"
+                            ]
+                        }
+                    }
+                ],
+                "customDnsConfigs": [
+                    {
+                        "fqdn": "[concat(variables('webAppInternalName'),variables('webAppDnsName'))]",
+                        "ipAddresses": [
+                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
+                        ]
+                    },
+                    {
+                        "fqdn": "[concat(variables('webAppInternalName'),'.scm',variables('webAppDnsName'))]",
+                        "ipAddresses": [
+                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
+                        ]
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]",
+                "[resourceId('Microsoft.Web/sites', variables('webAppInternalName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones",
+            "apiVersion": "2018-09-01",
+            "name": "[variables('privateDnsZoneName')]",
+            "location": "global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+            "apiVersion": "2018-09-01",
+            "name": "[format('{0}/{1}', variables('privateDnsZoneName'), format('{0}-link', variables('privateDnsZoneName')))]",
+            "location": "global",
+            "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+            "apiVersion": "2020-03-01",
+            "name": "[format('{0}/{1}', variables('webAppInternalPrivateEndpointName'), 'dnsgroupname')]",
+            "properties": {
+                "privateDnsZoneConfigs": [
+                    {
+                        "name": "config1",
+                        "properties": {
+                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('webAppInternalPrivateEndpointName'))]"
+            ]
         },
         {
             "type": "Microsoft.Network/firewallPolicies",
@@ -296,91 +381,6 @@
             ]
         },
         {
-            "type": "Microsoft.Network/privateEndpoints",
-            "apiVersion": "2020-06-01",
-            "name": "[variables('webAppInternalPrivateEndpointName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "subnet": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]"
-                },
-                "privateLinkServiceConnections": [
-                    {
-                        "name": "[variables('privateLinkConnectionName')]",
-                        "properties": {
-                            "privateLinkServiceId": "[resourceId('Microsoft.Web/sites', variables('webAppInternalName'))]",
-                            "groupIds": [
-                                "sites"
-                            ]
-                        }
-                    }
-                ],
-                "customDnsConfigs": [
-                    {
-                        "fqdn": "[concat(variables('webAppInternalName'),variables('webAppDnsName'))]",
-                        "ipAddresses": [
-                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
-                        ]
-                    },
-                    {
-                        "fqdn": "[concat(variables('webAppInternalName'),'.scm',variables('webAppDnsName'))]",
-                        "ipAddresses": [
-                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
-                        ]
-                    }
-                ]
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]",
-                "[resourceId('Microsoft.Web/sites', variables('webAppInternalName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Network/privateDnsZones",
-            "apiVersion": "2018-09-01",
-            "name": "[variables('privateDnsZoneName')]",
-            "location": "global",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-            "apiVersion": "2018-09-01",
-            "name": "[format('{0}/{1}', variables('privateDnsZoneName'), format('{0}-link', variables('privateDnsZoneName')))]",
-            "location": "global",
-            "properties": {
-                "registrationEnabled": false,
-                "virtualNetwork": {
-                    "id": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
-            "apiVersion": "2020-03-01",
-            "name": "[format('{0}/{1}', variables('webAppInternalPrivateEndpointName'), 'dnsgroupname')]",
-            "properties": {
-                "privateDnsZoneConfigs": [
-                    {
-                        "name": "config1",
-                        "properties": {
-                            "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
-                        }
-                    }
-                ]
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
-                "[resourceId('Microsoft.Network/privateEndpoints', variables('webAppInternalPrivateEndpointName'))]"
-            ]
-        },
-        {
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
             "name": "[variables('automationAccountName')]",
@@ -427,7 +427,7 @@
                 "logActivityTrace": 0,
                 "publishContentLink": {
                     "uri": "[variables('runbookUri')]"
-                    }
+                }
             }
         },
         {
@@ -612,46 +612,46 @@
             }
         },
         {
-            "type":"Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
-            "name":"[concat(variables('azureFirewallName'),'/microsoft.insights/', variables('diagSettingsName'))]",
-            "apiVersion":"2021-05-01-preview",
+            "type": "Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
+            "name": "[concat(variables('azureFirewallName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+            "apiVersion": "2021-05-01-preview",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
                 "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]"
             ],
-            "properties":{
-                "name":"DiagService",
-                "storageAccountId":null,
-                "eventHubAuthorizationRuleId":null,
-                "eventHubName":null,
-                "workspaceId":"[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "logs":[
-                {
-                    "category":"AzureFirewallApplicationRule",
-                    "enabled":true,
-                    "retentionPolicy":{
-                        "days":10,
-                        "enabled":false
+            "properties": {
+                "name": "DiagService",
+                "storageAccountId": null,
+                "eventHubAuthorizationRuleId": null,
+                "eventHubName": null,
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                "logs": [
+                    {
+                        "category": "AzureFirewallApplicationRule",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 10,
+                            "enabled": false
+                        }
+                    },
+                    {
+                        "category": "AzureFirewallNetworkRule",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 10,
+                            "enabled": false
+                        }
                     }
-                },
-                {
-                    "category":"AzureFirewallNetworkRule",
-                    "enabled":true,
-                    "retentionPolicy":{
-                        "days":10,
-                        "enabled":false
-                    }
-                }
                 ],
-                "metrics":[
-                {
-                    "category":"AllMetrics",
-                    "enabled":true,
-                    "retentionPolicy":{
-                        "enabled":false,
-                        "days":0
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
                     }
-                }
                 ]
             }
         }
