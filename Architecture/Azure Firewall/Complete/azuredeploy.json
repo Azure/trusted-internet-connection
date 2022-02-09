@@ -12,21 +12,14 @@
                 "description": "This is the version of the template you are running."
             }
         },
-        "networkLocation": {
-            "defaultValue": "eastus",
-            "type": "String",
-            "metadata": {
-                "description": "This is the region where all resources will deploy."
-            }
-        },
         "virtualNetworkIPRange": {
-            "defaultValue": "192.168.0.0/24",
+            "defaultValue": "192.168.0.0/16",
             "type": "String",
             "allowedValues": [
-                "192.168.0.0/24",
-                "10.0.0.0/24",
-                "10.10.0.0/24",
-                "10.100.0.0/24"
+                "192.168.0.0/16",
+                "10.0.0.0/16",
+                "10.10.0.0/16",
+                "10.100.0.0/16"
                 ],
             "metadata": {
                 "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
@@ -56,9 +49,10 @@
     },
     "variables": {
         "webAppDnsName": ".azurewebsites.net",
-        "privateDnsZoneName": "tic.privatelink.azurewebsites.net",
+        "networkLocation": "[resourceGroup().location]",
         "skuTier": "PremiumV2",
         "webAppUniqueName": "[format('{0}-{1}', parameters('webAppName'), uniqueString(resourceGroup().id))]",
+        "privateDnsZoneName": "[concat(variables('webAppUniqueName'),'.privatelink.azurewebsites.net')]",
         "virtualNetworkName": "[concat('VNET-', variables('webAppUniqueName'))]",
         "IPBase" : "[split(parameters('virtualNetworkIPRange'),'.')]",
         "subnetFirewallName": "AzureFirewallSubnet",
@@ -67,21 +61,23 @@
         "subnetInternalIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '10', '0', '26')]",
         "azureFirewallName": "[concat('AzFW-', variables('webAppUniqueName'))]",
         "azureFirewallPoliciesName": "[concat('AzFwP-', variables('webAppUniqueName'))]",
+        "azureFirewallPolicyCollectionName": "DNAT Rule Collection",
+        "azureFirewallPolicyRuleName": "[concat(variables('webAppUniqueName'),'-Inbound-NAT')]",
+        "azureFirewallPolicyRuleDestinationPort": "5443",
         "publicIPAzureFirewallName": "[concat('PIP-AzFw-', variables('webAppUniqueName'))]",
-        "logAnalyticsWorkspaceName": "[concat('LAWP-', variables('webAppUniqueName'))]",
+        "logAnalyticsWorkspaceName": "[concat('LAW-', variables('webAppUniqueName'))]",
         "webAppServiceName": "[concat('AppService-', variables('webAppUniqueName'))]",
         "webAppInternalName": "[concat(variables('webAppUniqueName'),'-Internal')]",
         "webAppSkuName": "P1v2",
-        "webAppInternalPrivateEndpointName": "[concat('AzFW-', variables('webAppUniqueName'))]",
-        "privateLinkConnectionName": "webAppInternalPrivateEndpointLink",
-        "automationAccountName": "AA-UploadLogsToCLAW",
-        "automationAccountLocation": "eastus",
+        "webAppInternalPrivateEndpointName": "[concat('Priv-', variables('webAppUniqueName'))]",
+        "privateLinkConnectionName": "[concat('PrivLink-', variables('webAppUniqueName'))]",
+        "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
         "scheduleName": "HourlyUploadsToCLAW",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
-        "runbookName": "UploadsToCLAWS3",
+        "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
         "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
-        "diagSettingsName": "SendToWorkspace",
+        "diagSettingsName": "[concat('SendtoWorkspace-', variables('webAppUniqueName'))]",
         "actionGroupName": "FailureEmail"
     },
     "resources": [
@@ -89,36 +85,63 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
             "name": "[variables('virtualNetworkName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
                         "[parameters('virtualNetworkIPRange')]"
                     ]
-                },
-                "subnets": [
-                    {
-                        "name": "[variables('subnetInternalName')]",
-                        "properties": {
-                            "addressPrefix": "[variables('subnetInternalIPRange')]",
-                            "privateEndpointNetworkPolicies": "Disabled"
-                        }
-                    },
-                    {
-                        "name": "[variables('subnetFirewallName')]",
-                        "properties": {
-                            "addressPrefix": "[variables('subnetFirewallIPRange')]",
-                            "privateEndpointNetworkPolicies": "Disabled"
-                        }
-                    }
-                ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetInternalName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[variables('subnetInternalIPRange')]",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetFirewallName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+            ],
+            "properties": {
+                "addressPrefix": "[variables('subnetFirewallIPRange')]",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Enabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[variables('publicIPAzureFirewallName')]",
+            "location": "[variables('networkLocation')]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
             }
         },
         {
             "type": "Microsoft.Network/firewallPolicies",
             "apiVersion": "2020-11-01",
             "name": "[variables('azureFirewallPoliciesName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "properties": {
                 "sku": {
                     "tier": "Premium"
@@ -133,10 +156,9 @@
             "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
             "apiVersion": "2020-11-01",
             "name": "[concat(variables('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/firewallPolicies', variables('azureFirewallPoliciesName'))]",
-                "[resourceId('Microsoft.Network/privateEndpoints', variables('webAppInternalPrivateEndpointName'))]",
                 "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))]"
             ],
             "properties": {
@@ -150,26 +172,25 @@
                         "rules": [
                             {
                                 "ruleType": "NatRule",
-                                "name": "webApp-Inbound",
-                                "translatedAddress": "[reference(resourceId('Microsoft.Network/networkInterfaces', variables('webAppInternalPrivateEndpointName'))).IPv4]",
+                                "name": "[variables('azureFirewallPolicyRuleName')]",
+                                "translatedAddress": "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]",
                                 "translatedPort": "443",
                                 "ipProtocols": [
-                                    "TCP",
-                                    "UDP"
+                                    "TCP"
                                 ],
                                 "sourceAddresses": [
                                     "*"
                                 ],
                                 "sourceIpGroups": [],
                                 "destinationAddresses": [
-                                    "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))).IPv4]"
+                                    "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))).ipAddress]"
                                 ],
                                 "destinationPorts": [
-                                    "5443"
+                                    "[variables('azureFirewallPolicyRuleDestinationPort')]"
                                 ]
                             }
                         ],
-                        "name": "DnatRule",
+                        "name": "[variables('azureFirewallPolicyCollectionName')]",
                         "priority": 150
                     }
                 ]
@@ -179,7 +200,7 @@
             "type": "Microsoft.Network/azureFirewalls",
             "apiVersion": "2020-11-01",
             "name": "[variables('azureFirewallName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetFirewallName'))]",
@@ -218,7 +239,7 @@
             "type": "microsoft.operationalinsights/workspaces",
             "apiVersion": "2021-06-01",
             "name": "[variables('logAnalyticsWorkspaceName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "properties": {
                 "sku": {
                     "name": "PerGB2018"
@@ -238,7 +259,7 @@
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2020-06-01",
             "name": "[variables('webAppServiceName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "sku": {
                 "name": "[variables('webAppSkuName')]",
                 "tier": "[variables('skuTier')]",
@@ -253,7 +274,7 @@
             "type": "Microsoft.Web/sites",
             "apiVersion": "2020-06-01",
             "name": "[variables('webAppInternalName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "kind": "app",
             "properties": {
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('webAppServiceName'))]"
@@ -278,7 +299,7 @@
             "type": "Microsoft.Network/privateEndpoints",
             "apiVersion": "2020-06-01",
             "name": "[variables('webAppInternalPrivateEndpointName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "properties": {
                 "subnet": {
                     "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]"
@@ -292,6 +313,20 @@
                                 "sites"
                             ]
                         }
+                    }
+                ],
+                "customDnsConfigs": [
+                    {
+                        "fqdn": "[concat(variables('webAppInternalName'),variables('webAppDnsName'))]",
+                        "ipAddresses": [
+                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
+                        ]
+                    },
+                    {
+                        "fqdn": "[concat(variables('webAppInternalName'),'.scm',variables('webAppDnsName'))]",
+                        "ipAddresses": [
+                            "[format('{0}.{1}.{2}.{3}', variables('IPBase')[0], variables('IPBase')[1], '10', '4')]"
+                        ]
                     }
                 ]
             },
@@ -349,7 +384,7 @@
             "type": "Microsoft.Automation/automationAccounts",
             "apiVersion": "2021-06-22",
             "name": "[variables('automationAccountName')]",
-            "location": "[parameters('networkLocation')]",
+            "location": "[variables('networkLocation')]",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -381,7 +416,7 @@
             "type": "Microsoft.Automation/automationAccounts/runbooks",
             "apiVersion": "2019-06-01",
             "name": "[concat(variables('automationAccountName'), '/' , variables('runbookName'))]",
-            "location": "[variables('automationAccountLocation')]",
+            "location": "[variables('networkLocation')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
@@ -567,7 +602,7 @@
                 },
                 "autoMitigate": false,
                 "targetResourceType": "Microsoft.Automation/automationAccounts",
-                "targetResourceRegion": "[variables('automationAccountLocation')]",
+                "targetResourceRegion": "[variables('networkLocation')]",
                 "actions": [
                     {
                         "actionGroupId": "[resourceId('microsoft.insights/actionGroups', variables('actionGroupName'))]",
@@ -580,7 +615,10 @@
             "type":"Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
             "name":"[concat(variables('azureFirewallName'),'/microsoft.insights/', variables('diagSettingsName'))]",
             "apiVersion":"2021-05-01-preview",
-            "dependsOn": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]"
+            ],
             "properties":{
                 "name":"DiagService",
                 "storageAccountId":null,
