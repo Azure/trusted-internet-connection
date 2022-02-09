@@ -78,7 +78,8 @@
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
         "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
         "diagSettingsName": "[concat('SendtoWorkspace-', variables('webAppUniqueName'))]",
-        "actionGroupName": "FailureEmail"
+        "actionGroupName": "FailureEmail",
+        "tenantId": "[subscription().tenantId]"
     },
     "resources": [
         {
@@ -452,6 +453,31 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/TenantId')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
+            ],
+            "properties": {
+                "description": "This is the Tenant ID from Azure AD. Initially populated from Deployment ARM Template.",
+                "value": "[variables('tenantId')]"
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/LogAnalyticWorkspaceID')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+            ],
+            "properties": {
+                "description": "Log Analytics Workspace where the Azure Firewall sends its diagnostic logs. Initially populated from Deployment ARM Template.",
+                "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))).LogAnalyticWorkspaceID]"
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/variables",
+            "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/AWSAccessKey')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
@@ -473,43 +499,7 @@
                 "description": "Provided by CISA, this will expire. Please discuss with CISA to understand when it rotates. Please UPDATE this variable before it expires."
             }
         },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/EnterpriseApplicationId')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Register a new Enterprise Application and collect the Enterprise Application ID for this variable"
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/EnterpriseApplicationSecret')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Create this variable from the cert & secrets pane for the Enterprise Application. This is typically valid for 6 months but could be valid up to 24 months."
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/LogAnalyticWorkspaceID')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "Log Analytics Workspace where the Azure Firewall sends its diagnostic logs."
-            }
-        },
-        {
+                {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/S3BucketName')]",
@@ -519,18 +509,6 @@
             "properties": {
                 "isEncrypted": true,
                 "description": "Provided by CISA."
-            }
-        },
-        {
-            "type": "Microsoft.Automation/automationAccounts/variables",
-            "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/TenantId')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
-            ],
-            "properties": {
-                "isEncrypted": true,
-                "description": "This is the Tenant ID from Azure AD"
             }
         },
         {

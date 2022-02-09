@@ -113,8 +113,8 @@ function Get-LogAnalyticsData () {
         $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
     }
     catch {
-        Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Ensure SPN has `
-        Reader access to the Log Analytics workspace, the SPN secret is valid, the Azure Firewall `
+        Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Ensure Managed Identity has `
+        Reader access to the Log Analytics workspace, the Azure Firewall `
         is sending diagnostic logs to the Log Analytics workspace, or verify the the `
         Az.OperationalInsights module is installed in the Automation Account `
         Module section. This is a fatal error and will exit the script."
@@ -179,22 +179,6 @@ catch {
 }
 
 try {
-    $EnterpriseApplicationId = Get-AutomationVariable -Name EnterpriseApplicationId
-}
-catch {
-    Write-Error "Failed to collect EnterpriseApplicationId, please verify variable exists `
-    in the same Automation Account in which this script was run."
-}
-
-try {
-    $EnterpriseApplicationSecret = Get-AutomationVariable -Name EnterpriseApplicationSecret
-}
-catch {
-    Write-Error "Failed to collect EnterpriseApplicationSecret, please verify variable exists `
-    in the same Automation Account in which this script was run."
-}
-
-try {
     $LogAnalyticWorkspaceID = Get-AutomationVariable -Name LogAnalyticWorkspaceID
 }
 catch {
@@ -227,45 +211,14 @@ catch {
 }
 
 try {
-    Write-Output "Generating Secure Password from variable."
-    $SecurePassword = ConvertTo-SecureString -AsPlainText -Force -String $EnterpriseApplicationSecret
-}
-catch {
-    Write-Error "Failed to convert `$EnterpriseApplicationSecret into a `
-    Secure String. This is a fatal error and will exit the script. Ensure `
-    the variable EnterpriseApplicationSecret exists and is not empty."
-    Exit 0
-}
-
-try {
-    Write-Output "Generating SPN Credential."
-    $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($EnterpriseApplicationId, $SecurePassword)
-}
-catch {
-    Write-Error "Failed to create credential to connect to Azure as the SPN. `
-    This is a fatal error ad will exit the script. Ensure the variable `
-    EnterpriseApplicationId exists and is not empty."
-}
-
-try {
-    Write-Output "Disabling SPN credential autosave."
-    Disable-AzContextAutosave | out-null
-}
-catch {
-    Write-Error "Failed to disable SPN credential autosave to the following `
-    location: 'C:\Users\username01\.Azure'. Please ensure that this `
-    directory has appropriate protections."
-}
-
-try {
     Write-Output "Connecting to Azure Account as SPN."
-    Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential | out-null
+    Connect-AzAccount -Identity -TenantId $TenantId | out-null
 }
 catch {
-    Write-Error "Failed to connect to Azure. Verify credentials are valid, `
-    the SPN is enabled, has access to the tenant, or verify the the `
-    Az.Account module is installed in the Automation Account `
-    Module section. This is a fatal error and will exit the script."
+    Write-Error "Failed to connect to Azure. Verify Managed Identity for, `
+    Automation Account is assigned Log Analytics Reader to your Log Analytics `
+    workspace, or verify the the Az.Account module is installed in the `
+    Automation Account Module section. This is a fatal error and will exit the script."
     Exit 0
 }
 
@@ -297,14 +250,21 @@ if ($logThirdpartyFirewall){
 if ($logAzureADAuth){
     $purpose = "Azure AD Auth Logs"
     $query = "SigninLogs 
-    | where TimeGenerated > ago(60m) 
+    | where TimeGenerated > ago(30m) 
     | project 
+        Category,
+        TimeGenerated,
+        OperationName,
         UserDisplayName,
         Identity,
         UserPrincipalName,
         AppDisplayName,
         AppId,
-        ResourceDisplayName"
+        ResourceDisplayName,
+        AuthenticationDetails,
+        AuthenticationProcessingDetails,
+        ConditionalAccessPolicies,
+        DeviceDetail"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
@@ -317,29 +277,47 @@ if ($logAzureADAuth){
 
 if ($logNetflow){
     $purpose = "Netflow Logs"
-    $query = "AzureNetworkAnalytics_CL
-    | where SubType_s == 'FlowLog'
-        and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
-    | where TimeGenerated > ago(60m)
-    | extend VMFields  = split(VM1_s, '/')
-    | extend VMName  = tostring(VMFields[1]) 
-    | project
-        TimeProcessed_t,
-        SrcIP_s,
-        Hostname,
-        FlowDirection_s,
-        L4Protocol_s,
-        L7Protocol_s,
-        DestPort_d,
-        FlowType_s,
-        AllowedOutFlows_d,
-        DeniedOutFlows_d,
-        OutboundBytes_d,
-        InboundBytes_d,
-        OutboundPackets_d,
-        InboundPackets_d,
-        AzureRegion_s,
-        Region1_s"
+    $query = "let Category = 'NetFlow';
+    AzureNetworkAnalytics_CL
+        | where SubType_s == 'FlowLog'
+            and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
+        | where TimeGenerated > ago(30m) 
+        | extend VMFields  = split(VM1_s, '/')
+        | extend VMName  = tostring(VMFields[1]) 
+        | extend FlowType = tostring(FlowType_s), 
+            SourceIP = tostring(SrcIP_s),
+            TargetIP = tostring(DestIP_s),
+            TartgetPort = tostring(DestPort_d),
+            L4Protocol = tostring(L4Protocol_s),
+            L7Protocol = tostring(L7Protocol_s),
+            FlowDirection = tostring(FlowDirection_s),
+            AllowedOutFlows = tostring(AllowedOutFlows_d),
+            DeniedOutFlows = tostring(DeniedOutFlows_d),
+            OutboundBytes = tostring(OutboundBytes_d),
+            InboundBytes = tostring(InboundBytes_d),
+            OutboundPackets = tostring(OutboundPackets_d),
+            InboundPackets = tostring(InboundPackets_d),
+            AzureRegion = tostring(AzureRegion_s),
+            Region = tostring(Region1_s)
+        | project
+            Category,
+            TimeGenerated,
+            VMName,
+            FlowDirection,
+            FlowType,
+            SourceIP,
+            TargetIP,
+            TartgetPort,
+            L4Protocol,
+            L7Protocol,
+            AllowedOutFlows,
+            DeniedOutFlows,
+            OutboundBytes,
+            InboundBytes,
+            OutboundPackets,
+            InboundPackets,
+            AzureRegion,
+            Region"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
@@ -356,7 +334,7 @@ if ($logAzureFrontDoor){
     | where ResourceType == 'FRONTDOORS'
         and (isnotempty(details_matches_s))
         and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
-    | where TimeGenerated > ago(60m)
+    | where TimeGenerated > ago(30m)
     | parse requestUri_s with Proto '://' TargetIP ':' TargetPort '/' Info
     | extend Action = iff(isempty(action_s),tostring(httpStatusCode_s),action_s)
     | extend Protocol = tostring(requestProtocol_s), 
@@ -365,6 +343,7 @@ if ($logAzureFrontDoor){
     | extend Protocol = case(Protocol == '', Proto,tostring(requestProtocol_s)),
         SourceIP = case(SourceIP == '', tostring(clientIP_s), tostring(clientIp_s))
     | project 
+        Category,
         TimeGenerated,
         Protocol,
         SourceIP,
@@ -386,19 +365,19 @@ if (($logAzureFirewall) -or (!$collectedLogs)){
     $purpose = "Azure Firewall Logs"
     $query = "AzureDiagnostics 
     | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
-    | where TimeGenerated > ago(60m)
+    | where TimeGenerated > ago(30m) 
     | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
     | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
     | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
     | extend SourcePort = tostring(SourcePortInt), TargetPort = tostring(TargetPortInt) 
-    | extend Action = case(Action1a == '', 
-        case(Action1b == '', Action2, Action1b), Action1a),
+    | extend Action = case(Action1a == '',  case(Action1b == '', Action2, Action1b), Action1a),
         Protocol = case(Protocol == '', Protocol2, Protocol),
         SourceIP = case(SourceIP == '', SourceIP2, SourceIP),
         TargetIP = case(TargetIP == '', TargetIP2, TargetIP),
         SourcePort = case(SourcePort == '', 'N/A', SourcePort),
         TargetPort = case(TargetPort == '', 'N/A', TargetPort)
     | project 
+        Category,
         TimeGenerated,
         Protocol,
         SourceIP,

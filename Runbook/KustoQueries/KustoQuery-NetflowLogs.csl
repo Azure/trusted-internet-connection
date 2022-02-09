@@ -1,4 +1,4 @@
-let Category = "NetFlow"; 
+let Category = "NetFlow";
 AzureNetworkAnalytics_CL
     | where SubType_s == 'FlowLog'
         and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
