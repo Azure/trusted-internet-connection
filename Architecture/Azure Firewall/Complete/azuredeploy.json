@@ -9,6 +9,19 @@
                 "description": "This is the region where all resources will deploy."
             }
         },
+        "virtualNetworkIPRange": {
+            "defaultValue": "192.168.0.0/24",
+            "type": "String",
+            "allowedValues": [
+                "192.168.0.0/24",
+                "10.0.0.0/24",
+                "10.10.0.0/24",
+                "10.100.0.0/24"
+                ],
+            "metadata": {
+                "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
+            }
+        },
         "webAppName": {
             "type": "string",
             "defaultValue": "webApp",
@@ -37,11 +50,11 @@
         "skuTier": "PremiumV2",
         "webAppUniqueName": "[format('{0}-{1}', parameters('webAppName'), uniqueString(resourceGroup().id))]",
         "virtualNetworkName": "[concat('VNET-', variables('webAppUniqueName'))]",
-        "virtualNetworkIPRange": "192.168.0.0/16",
+        "IPBase" : "[split(parameters('virtualNetworkIPRange'),'.')]",
         "subnetFirewallName": "AzureFirewallSubnet",
-        "subnetFirewallIPRange": "192.168.0.0/24",
+        "subnetFirewallIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '0', '0', '26')]",
         "subnetInternalName":"InternalSubnet",
-        "subnetInternalIPRange": "192.168.10.0/24",
+        "subnetInternalIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '10', '0', '26')]",
         "azureFirewallName": "[concat('AzFW-', variables('webAppUniqueName'))]",
         "azureFirewallPoliciesName": "[concat('AzFwP-', variables('webAppUniqueName'))]",
         "publicIPAzureFirewallName": "[concat('PIP-AzFw-', variables('webAppUniqueName'))]",
@@ -70,7 +83,7 @@
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
-                        "[variables('virtualNetworkIPRange')]"
+                        "[parameters('virtualNetworkIPRange')]"
                     ]
                 },
                 "subnets": [
