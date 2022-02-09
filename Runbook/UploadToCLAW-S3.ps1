@@ -211,7 +211,7 @@ catch {
 }
 
 try {
-    Write-Output "Connecting to Azure Account as SPN."
+    Write-Output "Connecting to Azure Account as Automation Account Managed Identity."
     Connect-AzAccount -Identity -TenantId $TenantId | out-null
 }
 catch {
@@ -236,13 +236,13 @@ catch {
 
 if ($logThirdpartyFirewall){
     $purpose = "Third-party Firewall Logs"
-    $query = "Syslog | where TimeGenerated > ago(60m)"
+    $query = "Syslog | where TimeGenerated > ago(30m)"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -270,7 +270,7 @@ if ($logAzureADAuth){
         Send-LogsToCLAW $purpose
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -323,7 +323,7 @@ if ($logNetflow){
         Send-LogsToCLAW $purpose
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -356,7 +356,7 @@ if ($logAzureFrontDoor){
         Send-LogsToCLAW $purpose
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -390,6 +390,6 @@ if (($logAzureFirewall) -or (!$collectedLogs)){
         Send-LogsToCLAW $purpose
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 60 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
     }
 }

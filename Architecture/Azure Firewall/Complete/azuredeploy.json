@@ -79,9 +79,30 @@
         "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
         "diagSettingsName": "[concat('SendtoWorkspace-', variables('webAppUniqueName'))]",
         "actionGroupName": "FailureEmail",
-        "tenantId": "[subscription().tenantId]"
+        "tenantIdObject": {
+            "value": "[subscription().tenantId]",
+            "type": "object"
+        },
+        "tenantId": "[variables('tenantIdObject').value]",
+        "logAnalyticsReaderRoleId": "73c42c96-874c-492b-b04d-ab87d138a893"
     },
     "resources": [
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2021-04-01-preview",
+            "name": "[guid(variables('automationAccountName'))]",
+            "properties": {
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', variables('logAnalyticsReaderRoleId'))]",
+                "principalId": "[reference(resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName')), '2021-06-22', 'Full').identity.principalId]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                "[resourceId('Microsoft.Web/sites', variables('webAppInternalName'))]",
+                "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+            ]
+        },
         {
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2020-11-01",
@@ -113,7 +134,8 @@
             "apiVersion": "2020-11-01",
             "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetFirewallName'))]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetInternalName'))]"
             ],
             "properties": {
                 "addressPrefix": "[variables('subnetFirewallIPRange')]",
@@ -451,6 +473,25 @@
             }
         },
         {
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
+            "properties": {
+                "parameters": {},
+                "runbook": {
+                    "name": "[variables('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[concat(variables('scheduleName'), '-0')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-0'))]"
+            ]
+        },
+        {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/TenantId')]",
@@ -459,7 +500,7 @@
             ],
             "properties": {
                 "description": "This is the Tenant ID from Azure AD. Initially populated from Deployment ARM Template.",
-                "value": "[variables('tenantId')]"
+                "value": "[concat('\"',variables('tenantId'),'\"')]"
             }
         },
         {
@@ -472,7 +513,7 @@
             ],
             "properties": {
                 "description": "Log Analytics Workspace where the Azure Firewall sends its diagnostic logs. Initially populated from Deployment ARM Template.",
-                "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))).LogAnalyticWorkspaceID]"
+                "value": "[concat('\"',reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))).customerId,'\"')]"
             }
         },
         {
@@ -499,7 +540,7 @@
                 "description": "Provided by CISA, this will expire. Please discuss with CISA to understand when it rotates. Please UPDATE this variable before it expires."
             }
         },
-                {
+        {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/S3BucketName')]",
