@@ -3,13 +3,23 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220209.1311",
+            "defaultValue": "20220211.0832",
             "type": "String",
             "allowedValues": [
-                "20220209.1311"
+                "20220211.0832"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
+            }
+        },
+        "deploymentScenario": {
+            "defaultValue": "Deploy Virtual Network, App Service, AzureFirewall Subnet, Internal Subnet, Azure Firewall, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will use private endpoint and Firewall DNAT rule on port 5443 for public access.",
+            "type": "String",
+            "allowedValues": [
+                "Deploy Virtual Network, App Service, AzureFirewall Subnet, Internal Subnet, Azure Firewall, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will use private endpoint and Firewall DNAT rule on port 5443 for public access."
+            ],
+            "metadata": {
+                "description": "Describes the purpose and resources to be deployed."
             }
         },
         "virtualNetworkIPRange": {

@@ -3,13 +3,23 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220209.1414",
+            "defaultValue": "20220211.0832",
             "type": "String",
             "allowedValues": [
-                "20220209.1414"
+                "20220211.0832"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
+            }
+        },
+        "deploymentScenario": {
+            "defaultValue": "Requires you have an Virtual Network, Azure Firewall, application with private IP address, and associated DNAT rules to access publically application. Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
+            "type": "String",
+            "allowedValues": [
+                "Requires you have an Virtual Network, Azure Firewall, application with private IP address, and associated DNAT rules to access publically application. Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
+            ],
+            "metadata": {
+                "description": "Describes the purpose and resources to be deployed."
             }
         },
         "deploymentPurpose": {
