@@ -178,7 +178,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "TRUE"
+                    "logAzureAppGateway" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -199,7 +199,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "TRUE"
+                    "logAzureAppGateway" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
