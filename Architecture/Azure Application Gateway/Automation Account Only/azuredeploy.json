@@ -177,7 +177,9 @@
             "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
-                "parameters": {},
+                "parameters": {
+                    "logAzureAppGateway" : "TRUE"
+                },
                 "runbook": {
                     "name": "[variables('runbookName')]"
                 },
@@ -196,7 +198,9 @@
             "apiVersion": "2020-01-13-preview",
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
-                "parameters": {},
+                "parameters": {
+                    "logAzureAppGateway" : "TRUE"
+                },
                 "runbook": {
                     "name": "[variables('runbookName')]"
                 },
