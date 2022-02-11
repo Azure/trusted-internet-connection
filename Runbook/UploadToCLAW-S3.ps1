@@ -383,7 +383,7 @@ if ($logAzureAppGateway){
             iif(isnotempty(hostname_s), 
                 tostring(hostname_s),
                 iif(isnotempty(originalHost_s), 
-                    iif(tostring(originalHost_s) != '~.*'' , 
+                    iif(tostring(originalHost_s) != '~.*' , 
                         tostring(originalHost_s),
                         tostring(Resource)
                     ),
@@ -405,7 +405,7 @@ if ($logAzureAppGateway){
                     tostring(WAFMode_s), 
                     iif(tostring(httpStatus_d) == '400' , 
                             'Bad Request', 
-                            strcat('Http Status - '', tostring(httpStatus_d)
+                            strcat('Http Status - ', tostring(httpStatus_d)
                         )
                     )
                 )

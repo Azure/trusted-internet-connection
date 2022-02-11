@@ -62,7 +62,7 @@ AzureDiagnostics
                 tostring(WAFMode_s), 
                 iif(tostring(httpStatus_d) == '400' , 
                         'Bad Request', 
-                        strcat('Http Status - '', tostring(httpStatus_d)
+                        strcat('Http Status - ', tostring(httpStatus_d)
                     )
                 )
             )
