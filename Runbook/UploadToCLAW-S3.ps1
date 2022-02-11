@@ -85,7 +85,9 @@ Param(
     [Parameter(Mandatory=$false)]
     [switch]$logNetflow,
     [Parameter(Mandatory=$false)]
-    [switch]$logAzureFrontDoor
+    [switch]$logAzureFrontDoor,
+    [Parameter(Mandatory=$false)]
+    [switch]$logAzureAppGateway
 
     )
 
@@ -351,6 +353,96 @@ if ($logAzureFrontDoor){
         TargetIP,
         TargetPort,
         Action"
+    Get-LogAnalyticsData $purpose $query
+    If($Global:jsonResults){
+        Send-LogsToCLAW $purpose
+    }
+    else {
+        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
+    }
+}
+
+if ($logAzureAppGateway){
+    $purpose = "Azure App Gateway Logs"
+    $query = "AzureDiagnostics 
+    | where ResourceProvider == 'MICROSOFT.NETWORK'
+        and (isnotempty(requestUri_s))
+        and Category == 'ApplicationGatewayFirewallLog' or Category == 'ApplicationGatewayAccessLog'
+    | where TimeGenerated > ago(60m)
+    | parse hostname_s with TargetIP ':' Port
+    | parse serverRouted_s with InternalIP ':' Port2
+    | extend 
+        SourceIP = 
+            iif(isnotempty(clientIP_s), 
+                tostring(clientIP_s), 
+                tostring(clientIp_s)
+            ),
+        SourcePort = 
+            iif(isnotempty(clientPort_d), 
+                trim('.0', tostring(clientPort_d)), 
+                iif(isnotempty(Port), 
+                    tostring(Port), 
+                    iif(isnotempty(Port2), 
+                        tostring(Port2), 
+                        iif(isnotempty(sslEnabled_s), 
+                            '443', 
+                            '80'
+                        )
+                    )
+                )
+            ),
+        TargetPort = 
+            iif(isnotempty(Port), 
+                tostring(Port), 
+                iif(isnotempty(Port2), 
+                    tostring(Port2), 
+                    iif(isnotempty(sslEnabled_s), 
+                        '443', 
+                        '80'
+                    )
+                )
+            ),
+        TargetIP = 
+            iif(isnotempty(hostname_s), 
+                tostring(hostname_s),
+                iif(isnotempty(originalHost_s), 
+                    iif(tostring(originalHost_s) != '~.*'' , 
+                        tostring(originalHost_s),
+                        tostring(Resource)
+                    ),
+                    tostring(Resource)
+                )
+            ),
+        Protocol = 
+            iif(isnotempty(httpVersion_s), 
+                tostring(httpVersion_s), 
+                iif(isnotempty(sslEnabled_s), 
+                    'HTTPS', 
+                    'HTTP'
+                )
+            ),
+        Action = 
+            iif(isnotempty(action_s), 
+                tostring(action_s), 
+                iif(isnotempty(WAFMode_s), 
+                    tostring(WAFMode_s), 
+                    iif(tostring(httpStatus_d) == '400' , 
+                            'Bad Request', 
+                            strcat('Http Status - '', tostring(httpStatus_d)
+                        )
+                    )
+                )
+            )
+    | project 
+    Category,
+    TimeGenerated,
+    SourceIP,
+    SourcePort,
+    TargetIP,
+    TargetPort,
+    Message,
+    Action"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose

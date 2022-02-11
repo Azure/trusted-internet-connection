@@ -1,21 +1,78 @@
 AzureDiagnostics 
-    | where ResourceType == 'FRONTDOORS'
-        and (isnotempty(details_matches_s))
-        and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
-    | where TimeGenerated > ago(30m)
-    | parse requestUri_s with Proto '://' TargetIP ':' TargetPort '/' Info
-    | extend Action = iff(isempty(action_s),tostring(httpStatusCode_s),action_s)
-    | extend Protocol = tostring(requestProtocol_s), 
-        SourceIP = tostring(clientIp_s),
-        SourcePort = tostring(clientPort_s)
-    | extend Protocol = case(Protocol == '', Proto,tostring(requestProtocol_s)),
-        SourceIP = case(SourceIP == '', tostring(clientIP_s), tostring(clientIp_s))
-    | project 
-        Category,
-        TimeGenerated,
-        Protocol,
-        SourceIP,
-        SourcePort,
-        TargetIP,
-        TargetPort,
-        Action
+| where ResourceProvider == 'MICROSOFT.NETWORK'
+    and (isnotempty(requestUri_s))
+    and Category == 'ApplicationGatewayFirewallLog' or Category == 'ApplicationGatewayAccessLog'
+| where TimeGenerated > ago(60m)
+| parse hostname_s with TargetIP ':' Port
+| parse serverRouted_s with InternalIP ':' Port2
+| extend 
+    SourceIP = 
+        iif(isnotempty(clientIP_s), 
+            tostring(clientIP_s), 
+            tostring(clientIp_s)
+        ),
+    SourcePort = 
+        iif(isnotempty(clientPort_d), 
+            trim('.0', tostring(clientPort_d)), 
+            iif(isnotempty(Port), 
+                tostring(Port), 
+                iif(isnotempty(Port2), 
+                    tostring(Port2), 
+                    iif(isnotempty(sslEnabled_s), 
+                        '443', 
+                        '80'
+                    )
+                )
+            )
+        ),
+    TargetPort = 
+        iif(isnotempty(Port), 
+            tostring(Port), 
+            iif(isnotempty(Port2), 
+                tostring(Port2), 
+                iif(isnotempty(sslEnabled_s), 
+                    '443', 
+                    '80'
+                )
+            )
+        ),
+    TargetIP = 
+        iif(isnotempty(hostname_s), 
+            tostring(hostname_s),
+            iif(isnotempty(originalHost_s), 
+                iif(tostring(originalHost_s) != '~.*' , 
+                    tostring(originalHost_s),
+                    tostring(Resource)
+                ),
+                tostring(Resource)
+            )
+        ),
+    Protocol = 
+        iif(isnotempty(httpVersion_s), 
+            tostring(httpVersion_s), 
+            iif(isnotempty(sslEnabled_s), 
+                'HTTPS', 
+                'HTTP'
+            )
+        ),
+    Action = 
+        iif(isnotempty(action_s), 
+            tostring(action_s), 
+            iif(isnotempty(WAFMode_s), 
+                tostring(WAFMode_s), 
+                iif(tostring(httpStatus_d) == '400' , 
+                        'Bad Request', 
+                        strcat('Http Status - '', tostring(httpStatus_d)
+                    )
+                )
+            )
+        )
+| project 
+Category,
+TimeGenerated,
+SourceIP,
+SourcePort,
+TargetIP,
+TargetPort,
+Message,
+Action

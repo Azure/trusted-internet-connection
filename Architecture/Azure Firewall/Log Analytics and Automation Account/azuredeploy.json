@@ -12,7 +12,7 @@
                 "description": "This is the version of the template you are running."
             }
         },
-        "azureResourcePrependName": {
+        "deploymentPurpose": {
             "type": "string",
             "defaultValue": "tic30",
             "metadata": {
@@ -50,7 +50,7 @@
     },
     "variables": {
         "networkLocation": "[resourceGroup().location]",
-        "webAppUniqueName": "[format('{0}-{1}', parameters('azureResourcePrependName'), uniqueString(resourceGroup().id))]",
+        "webAppUniqueName": "[format('{0}-{1}', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
         "logAnalyticsWorkspaceName": "[concat('LAW-', variables('webAppUniqueName'))]",
         "logAnalyticsResourceGroupName": "[resourceGroup().name]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",

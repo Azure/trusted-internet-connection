@@ -3,40 +3,44 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220209.1414",
+            "defaultValue": "20220211.0832",
             "type": "String",
             "allowedValues": [
-                "20220209.1414"
+                "20220211.0832"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
             }
         },
-        "virtualNetworkIPRange": {
-            "defaultValue": "192.168.0.0/16",
+        "deploymentScenario": {
+            "defaultValue": "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
             "type": "String",
             "allowedValues": [
-                "192.168.0.0/16",
-                "10.0.0.0/16",
-                "10.10.0.0/16",
-                "10.100.0.0/16"
+                "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
             ],
             "metadata": {
-                "description": "This is the IP Range for the VNET in which the Azure Firewall will reside."
+                "description": "Describes the purpose and resources to be deployed."
             }
         },
         "deploymentPurpose": {
             "type": "string",
-            "defaultValue": "tic30",
+            "defaultValue": "webAppExample",
             "metadata": {
-                "description": "Name will be used to create Azure Resources"
+                "description": "Short hand term used to create Azure resources."
             }
         },
-        "appFrontEndInternalIPAddress": {
-            "type": "string",
-            "defaultValue": "0.0.0.0",
+        "appGatewayName": {
+            "defaultValue": "TheNameofYourAppGateway",
+            "type": "String",
             "metadata": {
-                "description": "This is the internal (private) IP addresss of your existing application's front end."
+                "description": "This is the App Gateway that you are using to manage inbound access for your applications."
+            }
+        },
+        "appGatewayResourceGroupName": {
+            "defaultValue": "ResourceGroupNameOfAppGateway",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group Name where your App Gateway is located."
             }
         },
         "failedRunbookAlertEmail": {
@@ -57,19 +61,10 @@
     "variables": {
         "networkLocation": "[resourceGroup().location]",
         "webAppUniqueName": "[format('{0}-{1}', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
-        "virtualNetworkName": "[concat('VNET-', variables('webAppUniqueName'))]",
-        "IPBase": "[split(parameters('virtualNetworkIPRange'),'.')]",
-        "subnetFirewallName": "AzureFirewallSubnet",
-        "subnetFirewallIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '0', '0', '26')]",
-        "azureFirewallName": "[concat('AzFW-', variables('webAppUniqueName'))]",
-        "azureFirewallPoliciesName": "[concat('AzFwP-', variables('webAppUniqueName'))]",
-        "azureFirewallPolicyCollectionName": "DNAT Rule Collection",
-        "azureFirewallPolicyRuleName": "[concat(variables('webAppUniqueName'),'-Inbound-NAT')]",
-        "azureFirewallPolicyRuleDestinationPort": "5443",
-        "publicIPAzureFirewallName": "[concat('PIP-AzFw-', variables('webAppUniqueName'))]",
-        "logAnalyticsWorkspaceName": "[concat('LAW-', variables('webAppUniqueName'))]",
+        "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
+        "logAnalyticsResourceGroupName": "[resourceGroup().name]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
-        "scheduleName": "UploadAzureFirewallLogs",
+        "scheduleName": "UploadAzureAppGatewayLogs",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
@@ -94,150 +89,8 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
-                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
             ]
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('virtualNetworkName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[parameters('virtualNetworkIPRange')]"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetFirewallName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-            ],
-            "properties": {
-                "addressPrefix": "[variables('subnetFirewallIPRange')]",
-                "delegations": [],
-                "privateEndpointNetworkPolicies": "Enabled",
-                "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-        },
-        {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('publicIPAzureFirewallName')]",
-            "location": "[variables('networkLocation')]",
-            "sku": {
-                "name": "Standard",
-                "tier": "Regional"
-            },
-            "properties": {
-                "publicIPAddressVersion": "IPv4",
-                "publicIPAllocationMethod": "Static",
-                "idleTimeoutInMinutes": 4,
-                "ipTags": []
-            }
-        },
-        {
-            "type": "Microsoft.Network/firewallPolicies",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('azureFirewallPoliciesName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "sku": {
-                    "tier": "Premium"
-                },
-                "threatIntelMode": "Alert",
-                "intrusionDetection": {
-                    "mode": "Alert"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/firewallPolicies/ruleCollectionGroups",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(variables('azureFirewallPoliciesName'), '/DefaultNetworkRuleCollectionGroup')]",
-            "location": "[variables('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/firewallPolicies', variables('azureFirewallPoliciesName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))]"
-            ],
-            "properties": {
-                "priority": 100,
-                "ruleCollections": [
-                    {
-                        "ruleCollectionType": "FirewallPolicyNatRuleCollection",
-                        "action": {
-                            "type": "Dnat"
-                        },
-                        "rules": [
-                            {
-                                "ruleType": "NatRule",
-                                "name": "[variables('azureFirewallPolicyRuleName')]",
-                                "translatedAddress": "[parameters('appFrontEndInternalIPAddress')]",
-                                "translatedPort": "443",
-                                "ipProtocols": [
-                                    "TCP"
-                                ],
-                                "sourceAddresses": [
-                                    "*"
-                                ],
-                                "sourceIpGroups": [],
-                                "destinationAddresses": [
-                                    "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))).ipAddress]"
-                                ],
-                                "destinationPorts": [
-                                    "[variables('azureFirewallPolicyRuleDestinationPort')]"
-                                ]
-                            }
-                        ],
-                        "name": "[variables('azureFirewallPolicyCollectionName')]",
-                        "priority": 150
-                    }
-                ]
-            }
-        },
-        {
-            "type": "Microsoft.Network/azureFirewalls",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('azureFirewallName')]",
-            "location": "[variables('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetFirewallName'))]",
-                "[resourceId('Microsoft.Network/firewallPolicies', variables('azureFirewallPoliciesName'))]",
-                "[resourceId('Microsoft.Network/firewallPolicies/ruleCollectionGroups', variables('azureFirewallPoliciesName'), 'DefaultNetworkRuleCollectionGroup')]"
-            ],
-            "properties": {
-                "sku": {
-                    "name": "AZFW_VNet",
-                    "tier": "Premium"
-                },
-                "threatIntelMode": "Alert",
-                "additionalProperties": {},
-                "ipConfigurations": [
-                    {
-                        "name": "[concat('PIP-', variables('azureFirewallName'))]",
-                        "properties": {
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAzureFirewallName'))]"
-                            },
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetFirewallName'))]"
-                            }
-                        }
-                    }
-                ],
-                "networkRuleCollections": [],
-                "applicationRuleCollections": [],
-                "natRuleCollections": [],
-                "firewallPolicy": {
-                    "id": "[resourceId('Microsoft.Network/firewallPolicies', variables('azureFirewallPoliciesName'))]"
-                }
-            }
         },
         {
             "type": "microsoft.operationalinsights/workspaces",
@@ -363,8 +216,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
                 "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
-                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]",
-                "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]"
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]"
             ]
         },
         {
@@ -507,47 +359,67 @@
             }
         },
         {
-            "type": "Microsoft.Network/azureFirewalls/providers/diagnosticSettings",
-            "name": "[concat(variables('azureFirewallName'),'/microsoft.insights/', variables('diagSettingsName'))]",
-            "apiVersion": "2021-05-01-preview",
-            "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/azureFirewalls', variables('azureFirewallName'))]"
-            ],
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "NestedTemplate-AzureFirewallDiagnsoticSettings",
+            "resourceGroup": "[parameters('appGatewayResourceGroupName')]",
             "properties": {
-                "name": "DiagService",
-                "storageAccountId": null,
-                "eventHubAuthorizationRuleId": null,
-                "eventHubName": null,
-                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "logs": [
-                    {
-                        "category": "AzureFirewallApplicationRule",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
+                            "name": "[concat(parameters('appGatewayName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+                            "apiVersion": "2021-05-01-preview",
+                            "dependsOn": [],
+                            "properties": {
+                                "name": "DiagService",
+                                "storageAccountId": null,
+                                "eventHubAuthorizationRuleId": null,
+                                "eventHubName": null,
+                                "workspaceId": "[resourceId(variables('logAnalyticsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                                "logs": [
+                                    {
+                                        "category": "ApplicationGatewayAccessLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    },
+                                    {
+                                        "category": "ApplicationGatewayPerformanceLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    },
+                                    {
+                                        "category": "ApplicationGatewayFirewallLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    }
+                                ],
+                                "metrics": [
+                                    {
+                                        "category": "AllMetrics",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "enabled": false,
+                                            "days": 0
+                                        }
+                                    }
+                                ]
+                            }
                         }
-                    },
-                    {
-                        "category": "AzureFirewallNetworkRule",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
-                        }
-                    }
-                ],
-                "metrics": [
-                    {
-                        "category": "AllMetrics",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "enabled": false,
-                            "days": 0
-                        }
-                    }
-                ]
+                    ]
+                }
             }
         }
     ]
