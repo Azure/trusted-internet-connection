@@ -115,11 +115,7 @@ function Get-LogAnalyticsData () {
         $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
     }
     catch {
-        Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Ensure Managed Identity has `
-        Reader access to the Log Analytics workspace, the Azure Firewall `
-        is sending diagnostic logs to the Log Analytics workspace, or verify the the `
-        Az.OperationalInsights module is installed in the Automation Account `
-        Module section. This is a fatal error and will exit the script."
+        Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
         Exit 0
     }
     
@@ -128,8 +124,7 @@ function Get-LogAnalyticsData () {
         $Global:jsonResults = $results.Results | convertto-json
     }
     catch {
-        Write-Error "Failed to convert results to JSON. Sending logs in object `
-        format."
+        Write-Error "Failed to convert results to JSON. Sending logs in object format."
     }
 }
 
@@ -146,10 +141,7 @@ function Send-LogsToCLAW () {
         $key = ($logPurpose.replace(" ","")) + (get-date -Format u).replace("-","").replace(" ","").replace(":","").replace("Z","").toString() + (".json")
     }
     catch {
-        Write-Error "Failed to generate key. The key is the file in which the `
-        stream of JSON data is stored in the S3 bucket. Please rerun the script `
-        If the error continues, manually create a unique key name until issue is `
-        resolved. This is a fatal error and will exit the script."
+        Write-Error "Failed to generate key. The key is the file in which the stream of JSON data is stored in the S3 bucket. Please rerun the script. If the error continues, manually create a unique key name until issue is resolved. This is a fatal error and will exit the script."
         Exit 0
     }
     
@@ -158,12 +150,7 @@ function Send-LogsToCLAW () {
         Write-S3Object -BucketName $S3BucketName -stream $Global:jsonResults -key $key
     }
     catch {
-        Write-Error "Failed to complete the stream/upload of the results `
-        Please manually run the Runbook again or wait until the next scheduled `
-        task to run the Runbook. If the problem continues verify `
-        the S3BucketName exists and is correct, trouble connectivity to the S3 `
-        bucket manually, or contact cloud administrator. This is a fatal error `
-        and will exit the script."
+        Write-Error "Failed to complete the stream/upload of the results, please manually run the Runbook again or wait until the next scheduled task to run the Runbook. If the problem continues verify the S3BucketName exists and is correct, trouble connectivity to the S3 bucket manually, or contact cloud administrator. This is a fatal error and will exit the script."
         Exit 0
     }
     
@@ -176,40 +163,35 @@ try {
     $TenantId = Get-AutomationVariable -Name TenantId
 }
 catch {
-    Write-Error "Failed to collect TenantId, please verify variable exists `
-    in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect TenantId, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
     $LogAnalyticWorkspaceID = Get-AutomationVariable -Name LogAnalyticWorkspaceID
 }
 catch {
-    Write-Error "Failed to collect LogAnalyticWorkspaceID, please verify variable exists `
-    in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect LogAnalyticWorkspaceID, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
     $AWSAccessKey = Get-AutomationVariable -Name AWSAccessKey
 }
 catch {
-    Write-Error "Failed to collect AWSAccessKey, please verify variable exists `
-    in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect AWSAccessKey, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
     $AWSSecretKey = Get-AutomationVariable -Name AWSSecretKey
 }
 catch {
-    Write-Error "Failed to collect AWSSecretKey, please verify variable exists `
-    in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect AWSSecretKey, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
     $S3BucketName = Get-AutomationVariable -Name S3BucketName
 }
 catch {
-    Write-Error "Failed to collect S3BucketName, please verify variable exists `
-    in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect S3BucketName, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
@@ -217,10 +199,7 @@ try {
     Connect-AzAccount -Identity -TenantId $TenantId | out-null
 }
 catch {
-    Write-Error "Failed to connect to Azure. Verify Managed Identity for, `
-    Automation Account is assigned Log Analytics Reader to your Log Analytics `
-    workspace, or verify the the Az.Account module is installed in the `
-    Automation Account Module section. This is a fatal error and will exit the script."
+    Write-Error "Failed to connect to Azure. Verify Managed Identity for Automation Account is assigned Log Analytics Reader to your Log Analytics workspace, or verify the the Az.Account module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
     Exit 0
 }
 
@@ -229,10 +208,7 @@ try {
     Set-AWSCredential -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -StoreAs default
 }
 catch {
-    Write-Error "Failed to connect to AWS account. Verify the AccessKey and `
-    AccessSecret are valid and make sure the AWSPowerShell module is installed `
-    in the Automation Account Module section. This is a fatal error and `
-    will exit the script."
+    Write-Error "Failed to connect to AWS account. Verify the AccessKey and AccessSecret are valid and make sure the AWSPowerShell module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
     Exit 0
 }
 
