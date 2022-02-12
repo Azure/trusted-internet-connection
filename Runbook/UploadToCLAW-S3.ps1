@@ -218,10 +218,10 @@ if ($logThirdpartyFirewall){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
-        $collectedLogs = $true
     }
 }
 
@@ -246,10 +246,10 @@ if ($logAzureADAuth){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
-        $collectedLogs = $true
     }
 }
 
@@ -299,10 +299,10 @@ if ($logNetflow){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
-        $collectedLogs = $true
     }
 }
 
@@ -345,10 +345,10 @@ if ($logAzureFrontDoor){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
-        $collectedLogs = $true
     }
 }
 
@@ -434,10 +434,10 @@ if ($logAzureAppGateway){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
-        $collectedLogs = $true
     }
 }
 
@@ -495,6 +495,7 @@ if (($logAzureFirewall) -or (!$collectedLogs)){
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
+        $collectedLogs = $true
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
