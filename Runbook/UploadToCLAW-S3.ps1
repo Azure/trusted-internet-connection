@@ -257,45 +257,45 @@ if ($logNetflow){
     $purpose = "Netflow Logs"
     $query = "let Category = 'NetFlow';
     AzureNetworkAnalytics_CL
-        | where SubType_s == 'FlowLog'
-            and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
-        | where TimeGenerated > ago(30m) 
-        | extend VMFields  = split(VM1_s, '/')
-        | extend VMName  = tostring(VMFields[1]) 
-        | extend FlowType = tostring(FlowType_s), 
-            SourceIP = tostring(SrcIP_s),
-            TargetIP = tostring(DestIP_s),
-            TartgetPort = tostring(DestPort_d),
-            L4Protocol = tostring(L4Protocol_s),
-            L7Protocol = tostring(L7Protocol_s),
-            FlowDirection = tostring(FlowDirection_s),
-            AllowedOutFlows = tostring(AllowedOutFlows_d),
-            DeniedOutFlows = tostring(DeniedOutFlows_d),
-            OutboundBytes = tostring(OutboundBytes_d),
-            InboundBytes = tostring(InboundBytes_d),
-            OutboundPackets = tostring(OutboundPackets_d),
-            InboundPackets = tostring(InboundPackets_d),
-            AzureRegion = tostring(AzureRegion_s),
-            Region = tostring(Region1_s)
-        | project
-            Category,
-            TimeGenerated,
-            VMName,
-            FlowDirection,
-            FlowType,
-            SourceIP,
-            TargetIP,
-            TartgetPort,
-            L4Protocol,
-            L7Protocol,
-            AllowedOutFlows,
-            DeniedOutFlows,
-            OutboundBytes,
-            InboundBytes,
-            OutboundPackets,
-            InboundPackets,
-            AzureRegion,
-            Region"
+    | where SubType_s == 'FlowLog'
+        and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
+    | where TimeGenerated > ago(30m) 
+    | extend VMFields  = split(VM1_s, '/')
+    | extend VMName  = tostring(VMFields[1]) 
+    | extend FlowType = tostring(FlowType_s), 
+        SourceIP = tostring(SrcIP_s),
+        TargetIP = tostring(DestIP_s),
+        TartgetPort = tostring(DestPort_d),
+        L4Protocol = tostring(L4Protocol_s),
+        L7Protocol = tostring(L7Protocol_s),
+        FlowDirection = tostring(FlowDirection_s),
+        AllowedOutFlows = tostring(AllowedOutFlows_d),
+        DeniedOutFlows = tostring(DeniedOutFlows_d),
+        OutboundBytes = tostring(OutboundBytes_d),
+        InboundBytes = tostring(InboundBytes_d),
+        OutboundPackets = tostring(OutboundPackets_d),
+        InboundPackets = tostring(InboundPackets_d),
+        AzureRegion = tostring(AzureRegion_s),
+        Region = tostring(Region1_s)
+    | project
+        Category,
+        TimeGenerated,
+        VMName,
+        FlowDirection,
+        FlowType,
+        SourceIP,
+        TargetIP,
+        TartgetPort,
+        L4Protocol,
+        L7Protocol,
+        AllowedOutFlows,
+        DeniedOutFlows,
+        OutboundBytes,
+        InboundBytes,
+        OutboundPackets,
+        InboundPackets,
+        AzureRegion,
+        Region"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
@@ -314,12 +314,25 @@ if ($logAzureFrontDoor){
         and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
     | where TimeGenerated > ago(30m)
     | parse requestUri_s with Proto '://' TargetIP ':' TargetPort '/' Info
-    | extend Action = iff(isempty(action_s),tostring(httpStatusCode_s),action_s)
     | extend Protocol = tostring(requestProtocol_s), 
         SourceIP = tostring(clientIp_s),
         SourcePort = tostring(clientPort_s)
-    | extend Protocol = case(Protocol == '', Proto,tostring(requestProtocol_s)),
-        SourceIP = case(SourceIP == '', tostring(clientIP_s), tostring(clientIp_s))
+    | extend 
+        Action = 
+            iff(isempty(action_s),
+                tostring(httpStatusCode_s),
+                tostring(action_s)
+            ),
+        Protocol = 
+            iif(isnotempty(Proto), 
+                tostring(Proto), 
+                tostring(requestProtocol_s)
+            ),
+        SourceIP = 
+            iif(isnotempty(clientIP_s), 
+                tostring(clientIP_s), 
+                tostring(clientIp_s)
+            )
     | project 
         Category,
         TimeGenerated,
@@ -405,8 +418,7 @@ if ($logAzureAppGateway){
                     tostring(WAFMode_s), 
                     iif(tostring(httpStatus_d) == '400' , 
                             'Bad Request', 
-                            strcat('Http Status - ', tostring(httpStatus_d)
-                        )
+                            strcat('Http Status - ', replace_string(tostring(httpStatus_d), '.0',''))
                     )
                 )
             )
@@ -434,16 +446,43 @@ if (($logAzureFirewall) -or (!$collectedLogs)){
     $query = "AzureDiagnostics 
     | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
     | where TimeGenerated > ago(30m) 
-    | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
+    | parse msg_s with Protocol1 ' request from ' SourceIP1 ':' SourcePortInt: int ' to ' TargetIP1 ':' TargetPortInt: int* 
     | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
     | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
-    | extend SourcePort = tostring(SourcePortInt), TargetPort = tostring(TargetPortInt) 
-    | extend Action = case(Action1a == '',  case(Action1b == '', Action2, Action1b), Action1a),
-        Protocol = case(Protocol == '', Protocol2, Protocol),
-        SourceIP = case(SourceIP == '', SourceIP2, SourceIP),
-        TargetIP = case(TargetIP == '', TargetIP2, TargetIP),
-        SourcePort = case(SourcePort == '', 'N/A', SourcePort),
-        TargetPort = case(TargetPort == '', 'N/A', TargetPort)
+    | extend
+        SourceIP = 
+            iif(isnotempty(SourceIP1), 
+                tostring(SourceIP1), 
+                tostring(SourceIP2)
+            ),
+        SourcePort = 
+            iif(isnotempty(SourcePortInt), 
+                tostring(SourcePortInt),
+                'N/A'
+            ),
+        TargetPort = 
+            iif(isnotempty(TargetPortInt), 
+                 tostring(TargetPortInt),
+                'N/A'
+            ),
+        TargetIP = 
+            iif(isnotempty(TargetIP1), 
+                tostring(TargetIP1), 
+                tostring(TargetIP2)
+            ),
+        Protocol = 
+            iif(isnotempty(Protocol1), 
+                tostring(Protocol1), 
+                tostring(Protocol2)
+            ),
+        Action = 
+            iif(isnotempty(Action1a), 
+                replace_string(tostring(Action1a), '.',''), 
+                iif(isnotempty(Action1b), 
+                    tostring(Action1b),
+                    tostring(Action2)
+                )
+            )
     | project 
         Category,
         TimeGenerated,

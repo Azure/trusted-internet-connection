@@ -1,22 +1,49 @@
 AzureDiagnostics 
-    | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
-    | where TimeGenerated > ago(30m) 
-    | parse msg_s with Protocol ' request from ' SourceIP ':' SourcePortInt: int ' to ' TargetIP ':' TargetPortInt: int* 
-    | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
-    | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
-    | extend SourcePort = tostring(SourcePortInt), TargetPort = tostring(TargetPortInt) 
-    | extend Action = case(Action1a == '',  case(Action1b == '', Action2, Action1b), Action1a),
-        Protocol = case(Protocol == '', Protocol2, Protocol),
-        SourceIP = case(SourceIP == '', SourceIP2, SourceIP),
-        TargetIP = case(TargetIP == '', TargetIP2, TargetIP),
-        SourcePort = case(SourcePort == '', 'N/A', SourcePort),
-        TargetPort = case(TargetPort == '', 'N/A', TargetPort)
-    | project 
-        Category,
-        TimeGenerated,
-        Protocol,
-        SourceIP,
-        SourcePort,
-        TargetIP,
-        TargetPort,
-        Action
+| where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
+| where TimeGenerated > ago(30m) 
+| parse msg_s with Protocol1 ' request from ' SourceIP1 ':' SourcePortInt: int ' to ' TargetIP1 ':' TargetPortInt: int* 
+| parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
+| parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
+| extend
+    SourceIP = 
+        iif(isnotempty(SourceIP1), 
+            tostring(SourceIP1), 
+            tostring(SourceIP2)
+        ),
+    SourcePort = 
+        iif(isnotempty(SourcePortInt), 
+            tostring(SourcePortInt),
+            'N/A'
+        ),
+    TargetPort = 
+        iif(isnotempty(TargetPortInt), 
+             tostring(TargetPortInt),
+            'N/A'
+        ),
+    TargetIP = 
+        iif(isnotempty(TargetIP1), 
+            tostring(TargetIP1), 
+            tostring(TargetIP2)
+        ),
+    Protocol = 
+        iif(isnotempty(Protocol1), 
+            tostring(Protocol1), 
+            tostring(Protocol2)
+        ),
+    Action = 
+        iif(isnotempty(Action1a), 
+            replace_string(tostring(Action1a), '.',''), 
+            iif(isnotempty(Action1b), 
+                tostring(Action1b),
+                tostring(Action2)
+            )
+        )
+| project 
+    Category,
+    TimeGenerated,
+    Protocol,
+    SourceIP,
+    SourcePort,
+    TargetIP,
+    TargetPort,
+    Action
