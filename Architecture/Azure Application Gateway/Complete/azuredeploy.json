@@ -76,7 +76,7 @@
         "appGatewayBackEndHttpSettingsName": "myHttpSetting",
         "appGatewayHttpListenerName": "myListener",
         "azureWafPoliciesName": "[concat('Waf-AppGw-', variables('webAppUniqueName'))]",
-        "publicIPAppGatewayName": "[concat('Pip-AzFw-', variables('webAppUniqueName'))]",
+        "publicIPAppGatewayName": "[concat('Pip-AppGw-', variables('webAppUniqueName'))]",
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
         "webAppServiceName": "[concat('AppService-', variables('webAppUniqueName'))]",
         "webAppInternalName": "[concat(variables('webAppUniqueName'),'-Internal')]",

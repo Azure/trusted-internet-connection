@@ -82,7 +82,7 @@
         "appGatewayBackEndHttpSettingsName": "myHttpSetting",
         "appGatewayHttpListenerName": "myListener",
         "azureWafPoliciesName": "[concat('Waf-AppGw-', variables('webAppUniqueName'))]",
-        "publicIPAppGatewayName": "[concat('Pip-AppGw-', variables('webAppUniqueName'))]",
+        "publicIPAppGatewayName": "[concat('Pip-AzFw-', variables('webAppUniqueName'))]",
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
         "scheduleName": "UploadAzureAppGatewayLogs",

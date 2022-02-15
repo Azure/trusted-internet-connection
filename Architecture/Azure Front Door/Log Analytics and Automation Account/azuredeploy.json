@@ -13,26 +13,13 @@
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Deploy Virtual Network, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP.",
+            "defaultValue": "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
             "type": "String",
             "allowedValues": [
-                "Deploy Virtual Network, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP."
+                "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."
-            }
-        },
-        "virtualNetworkIPRange": {
-            "defaultValue": "192.168.0.0/16",
-            "type": "String",
-            "allowedValues": [
-                "192.168.0.0/16",
-                "10.0.0.0/16",
-                "10.10.0.0/16",
-                "10.100.0.0/16"
-            ],
-            "metadata": {
-                "description": "This is the IP Range for the virtual network in which the Azure App Gateway and Web App will reside."
             }
         },
         "deploymentPurpose": {
@@ -42,11 +29,18 @@
                 "description": "Short hand term used to create Azure resources."
             }
         },
-        "webAppFqdn": {
-            "type": "string",
-            "defaultValue": "something.azurewebsites.net",
+        "appGatewayName": {
+            "defaultValue": "TheNameofYourAppGateway",
+            "type": "String",
             "metadata": {
-                "description": "This deployment scenario assumes you are using App Service. If it is not App Service, you can deploy this scenario to p"
+                "description": "This is the App Gateway that you are using to manage inbound access for your applications."
+            }
+        },
+        "appGatewayResourceGroupName": {
+            "defaultValue": "ResourceGroupNameOfAppGateway",
+            "type": "String",
+            "metadata": {
+                "description": "This is the Resource Group Name where your App Gateway is located."
             }
         },
         "failedRunbookAlertEmail": {
@@ -66,24 +60,9 @@
     },
     "variables": {
         "networkLocation": "[resourceGroup().location]",
-        "skuTier": "WAF_v2",
         "webAppUniqueName": "[format('{0}-{1}', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
-        "virtualNetworkName": "[concat('VNet-', variables('webAppUniqueName'))]",
-        "IPBase": "[split(parameters('virtualNetworkIPRange'),'.')]",
-        "subnetAppGatewayName": "AppGatewaySubnet",
-        "subnetAppGatewayIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '0', '0', '26')]",
-        "appGatewayName": "[concat('AppGw-', variables('webAppUniqueName'))]",
-        "appGatewayCapacity": 2,
-        "appGatewayPortName": "port_80",
-        "appGatewayPort": 80,
-        "appGatewayProtocol": "Http",
-        "appGatewayFrontEndName": "appGwPublicFrontendIp",
-        "appGatewayBackEndPoolName": "internalWebApp",
-        "appGatewayBackEndHttpSettingsName": "myHttpSetting",
-        "appGatewayHttpListenerName": "myListener",
-        "azureWafPoliciesName": "[concat('Waf-AppGw-', variables('webAppUniqueName'))]",
-        "publicIPAppGatewayName": "[concat('Pip-AppGw-', variables('webAppUniqueName'))]",
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
+        "logAnalyticsResourceGroupName": "[resourceGroup().name]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
         "scheduleName": "UploadAzureAppGatewayLogs",
         "scheduleCount": 5,
@@ -110,211 +89,8 @@
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
-                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
             ]
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('virtualNetworkName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[parameters('virtualNetworkIPRange')]"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetAppGatewayName'))]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-            ],
-            "properties": {
-                "addressPrefix": "[variables('subnetAppGatewayIPRange')]",
-                "serviceEndpoints": [
-                    {
-                        "service": "Microsoft.Web",
-                        "locations": [
-                            "*"
-                        ]
-                    }
-                ],
-                "delegations": [],
-                "privateEndpointNetworkPolicies": "Enabled",
-                "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-        },
-        {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('publicIPAppGatewayName')]",
-            "location": "[variables('networkLocation')]",
-            "sku": {
-                "name": "Standard",
-                "tier": "Regional"
-            },
-            "properties": {
-                "publicIPAddressVersion": "IPv4",
-                "publicIPAllocationMethod": "Static",
-                "idleTimeoutInMinutes": 4,
-                "ipTags": []
-            }
-        },
-        {
-            "type": "Microsoft.Network/applicationGateways",
-            "apiVersion": "2020-06-01",
-            "name": "[variables('appGatewayName')]",
-            "location": "[variables('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAppGatewayName'))]",
-                "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetAppGatewayName'))]"
-            ],
-            "properties": {
-                "sku": {
-                    "name": "[variables('skuTier')]",
-                    "tier": "[variables('skuTier')]",
-                    "capacity": "[variables('appGatewayCapacity')]"
-                },
-                "gatewayIPConfigurations": [
-                    {
-                        "name": "appGatewayIpConfig",
-                        "properties": {
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetAppGatewayName'))]"
-                            }
-                        }
-                    }
-                ],
-                "frontendIPConfigurations": [
-                    {
-                        "name": "[variables('appGatewayFrontEndName')]",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAppGatewayName'))]"
-                            }
-                        }
-                    }
-                ],
-                "frontendPorts": [
-                    {
-                        "name": "[variables('appGatewayPortName')]",
-                        "properties": {
-                            "port": "[variables('appGatewayPort')]"
-                        }
-                    }
-                ],
-                "backendAddressPools": [
-                    {
-                        "name": "[variables('appGatewayBackEndPoolName')]",
-                        "properties": {
-                            "backendAddresses": [
-                                {
-                                    "fqdn": "[parameters('webAppFqdn')]"
-                                }
-                            ]
-                        }
-                    }
-                ],
-                "backendHttpSettingsCollection": [
-                    {
-                        "name": "[variables('appGatewayBackEndHttpSettingsName')]",
-                        "properties": {
-                            "port": "[variables('appGatewayPort')]",
-                            "protocol": "[variables('appGatewayProtocol')]",
-                            "cookieBasedAffinity": "Disabled",
-                            "pickHostNameFromBackendAddress": true,
-                            "requestTimeout": 20
-                        }
-                    }
-                ],
-                "httpListeners": [
-                    {
-                        "name": "[variables('appGatewayHttpListenerName')]",
-                        "properties": {
-                            "firewallPolicy": {
-                                "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]"
-                            },
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('appGatewayName'), variables('appGatewayFrontEndName'))]"
-                            },
-                            "frontendPort": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('appGatewayName'), variables('appGatewayPortName'))]"
-                            },
-                            "protocol": "[variables('appGatewayProtocol')]",
-                            "requireServerNameIndication": false
-                        }
-                    }
-                ],
-                "requestRoutingRules": [
-                    {
-                        "name": "myRoutingRule",
-                        "properties": {
-                            "ruleType": "Basic",
-                            "httpListener": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('appGatewayName'), variables('appGatewayHttpListenerName'))]"
-                            },
-                            "backendAddressPool": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('appGatewayName'), variables('appGatewayBackEndPoolName'))]"
-                            },
-                            "backendHttpSettings": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('appGatewayName'), variables('appGatewayBackEndHttpSettingsName'))]"
-                            }
-                        }
-                    }
-                ],
-                "enableHttp2": false,
-                "webApplicationFirewallConfiguration": {
-                    "enabled": true,
-                    "firewallMode": "Prevention",
-                    "ruleSetType": "OWASP",
-                    "ruleSetVersion": "3.2",
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100
-                },
-                "firewallPolicy": {
-                    "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies",
-            "apiVersion": "2020-06-01",
-            "name": "[variables('azureWafPoliciesName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "customRules": [],
-                "policySettings": {
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100,
-                    "state": "Enabled",
-                    "mode": "Prevention"
-                },
-                "managedRules": {
-                    "exclusions": [],
-                    "managedRuleSets": [
-                        {
-                            "ruleSetType": "OWASP",
-                            "ruleSetVersion": "3.2",
-                            "ruleGroupOverrides": []
-                        },
-                        {
-                            "ruleSetType": "Microsoft_BotManagerRuleSet",
-                            "ruleSetVersion": "0.1",
-                            "ruleGroupOverrides": []
-                        }
-                    ]
-                }
-            }
         },
         {
             "type": "microsoft.operationalinsights/workspaces",
@@ -444,8 +220,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
                 "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
-                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]"
             ]
         },
         {
@@ -588,55 +363,67 @@
             }
         },
         {
-            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
-            "name": "[concat(variables('appGatewayName'),'/microsoft.insights/', variables('diagSettingsName'))]",
-            "apiVersion": "2021-05-01-preview",
-            "dependsOn": [
-                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
-            ],
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2021-04-01",
+            "name": "NestedTemplate-AzureFirewallDiagnsoticSettings",
+            "resourceGroup": "[parameters('appGatewayResourceGroupName')]",
             "properties": {
-                "name": "DiagService",
-                "storageAccountId": null,
-                "eventHubAuthorizationRuleId": null,
-                "eventHubName": null,
-                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "logs": [
-                    {
-                        "category": "ApplicationGatewayAccessLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
+                            "name": "[concat(parameters('appGatewayName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+                            "apiVersion": "2021-05-01-preview",
+                            "dependsOn": [],
+                            "properties": {
+                                "name": "DiagService",
+                                "storageAccountId": null,
+                                "eventHubAuthorizationRuleId": null,
+                                "eventHubName": null,
+                                "workspaceId": "[resourceId(variables('logAnalyticsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                                "logs": [
+                                    {
+                                        "category": "ApplicationGatewayAccessLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    },
+                                    {
+                                        "category": "ApplicationGatewayPerformanceLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    },
+                                    {
+                                        "category": "ApplicationGatewayFirewallLog",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "days": 10,
+                                            "enabled": false
+                                        }
+                                    }
+                                ],
+                                "metrics": [
+                                    {
+                                        "category": "AllMetrics",
+                                        "enabled": true,
+                                        "retentionPolicy": {
+                                            "enabled": false,
+                                            "days": 0
+                                        }
+                                    }
+                                ]
+                            }
                         }
-                    },
-                    {
-                        "category": "ApplicationGatewayPerformanceLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
-                        }
-                    },
-                    {
-                        "category": "ApplicationGatewayFirewallLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
-                        }
-                    }
-                ],
-                "metrics": [
-                    {
-                        "category": "AllMetrics",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "enabled": false,
-                            "days": 0
-                        }
-                    }
-                ]
+                    ]
+                }
             }
         }
     ]
