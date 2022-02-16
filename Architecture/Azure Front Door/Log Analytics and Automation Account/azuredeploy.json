@@ -3,20 +3,20 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220211.0832",
+            "defaultValue": "20220216.0850",
             "type": "String",
             "allowedValues": [
-                "20220211.0832"
+                "20220216.0850"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
+            "defaultValue": "Requires you have a Front Door with some type of application connected to the backend of the Front Door. The backend application is not required to be an App Service, any type of hosting platform is acceptable. Requires you have a Web Application Firewall policy assigned to the Front Door. Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
             "type": "String",
             "allowedValues": [
-                "Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
+                "Requires you have a Front Door with some type of application connected to the backend of the Front Door. The backend application is not required to be an App Service, any type of hosting platform is acceptable. Requires you have a Web Application Firewall policy assigned to the Front Door. Deploy Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."
@@ -29,18 +29,11 @@
                 "description": "Short hand term used to create Azure resources."
             }
         },
-        "appGatewayName": {
-            "defaultValue": "TheNameofYourAppGateway",
-            "type": "String",
+        "frontDoorName": {
+            "type": "string",
+            "defaultValue": "frontDoorResourceName",
             "metadata": {
-                "description": "This is the App Gateway that you are using to manage inbound access for your applications."
-            }
-        },
-        "appGatewayResourceGroupName": {
-            "defaultValue": "ResourceGroupNameOfAppGateway",
-            "type": "String",
-            "metadata": {
-                "description": "This is the Resource Group Name where your App Gateway is located."
+                "description": "Resource name of your Front Door."
             }
         },
         "failedRunbookAlertEmail": {
@@ -62,9 +55,8 @@
         "networkLocation": "[resourceGroup().location]",
         "webAppUniqueName": "[format('{0}-{1}', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
-        "logAnalyticsResourceGroupName": "[resourceGroup().name]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
-        "scheduleName": "UploadAzureAppGatewayLogs",
+        "scheduleName": "UploadAzureFrontDoorLogs",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
@@ -187,7 +179,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureFrontDoor": "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -208,7 +200,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureFrontDoor": "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -363,67 +355,47 @@
             }
         },
         {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2021-04-01",
-            "name": "NestedTemplate-AzureFirewallDiagnsoticSettings",
-            "resourceGroup": "[parameters('appGatewayResourceGroupName')]",
+            "type": "Microsoft.Network/frontdoors/providers/diagnosticSettings",
+            "name": "[concat(parameters('frontDoorName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+            "apiVersion": "2021-05-01-preview",
+            "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                "[resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName'))]"
+            ],
             "properties": {
-                "mode": "Incremental",
-                "template": {
-                    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-                    "contentVersion": "1.0.0.0",
-                    "resources": [
-                        {
-                            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
-                            "name": "[concat(parameters('appGatewayName'),'/microsoft.insights/', variables('diagSettingsName'))]",
-                            "apiVersion": "2021-05-01-preview",
-                            "dependsOn": [],
-                            "properties": {
-                                "name": "DiagService",
-                                "storageAccountId": null,
-                                "eventHubAuthorizationRuleId": null,
-                                "eventHubName": null,
-                                "workspaceId": "[resourceId(variables('logAnalyticsResourceGroupName'), 'Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                                "logs": [
-                                    {
-                                        "category": "ApplicationGatewayAccessLog",
-                                        "enabled": true,
-                                        "retentionPolicy": {
-                                            "days": 10,
-                                            "enabled": false
-                                        }
-                                    },
-                                    {
-                                        "category": "ApplicationGatewayPerformanceLog",
-                                        "enabled": true,
-                                        "retentionPolicy": {
-                                            "days": 10,
-                                            "enabled": false
-                                        }
-                                    },
-                                    {
-                                        "category": "ApplicationGatewayFirewallLog",
-                                        "enabled": true,
-                                        "retentionPolicy": {
-                                            "days": 10,
-                                            "enabled": false
-                                        }
-                                    }
-                                ],
-                                "metrics": [
-                                    {
-                                        "category": "AllMetrics",
-                                        "enabled": true,
-                                        "retentionPolicy": {
-                                            "enabled": false,
-                                            "days": 0
-                                        }
-                                    }
-                                ]
-                            }
+                "name": "DiagService",
+                "storageAccountId": null,
+                "eventHubAuthorizationRuleId": null,
+                "eventHubName": null,
+                "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
+                "logs": [
+                    {
+                        "category": "FrontdoorAccessLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 10,
+                            "enabled": false
                         }
-                    ]
-                }
+                    },
+                    {
+                        "category": "FrontdoorWebApplicationFirewallLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "days": 10,
+                            "enabled": false
+                        }
+                    }
+                ],
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    }
+                ]
             }
         }
     ]

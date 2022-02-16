@@ -13,10 +13,10 @@
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Deploy Virtual Network, App Service, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP.",
+            "defaultValue": "Deploy Virtual Network, App Service, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the App Gateway and restricted to only accept request from the App Gateway IP. This configures the app so it is only accessible using App Gateway URL.",
             "type": "String",
             "allowedValues": [
-                "Deploy Virtual Network, App Service, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP."
+                "Deploy Virtual Network, App Service, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the App Gateway and restricted to only accept request from the App Gateway IP. This configures the app so it is only accessible using App Gateway URL."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."

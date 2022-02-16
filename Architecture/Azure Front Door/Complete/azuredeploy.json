@@ -3,36 +3,23 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220211.0832",
+            "defaultValue": "20220216.0850",
             "type": "String",
             "allowedValues": [
-                "20220211.0832"
+                "20220216.0850"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Deploy Virtual Network, App Service, FrontDoor Subnet with Microsoft.Web service endpoint, Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the Front Door and restricted so only accessible using Front Door Public IP.",
+            "defaultValue": "Deploy App Service, Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the Front Door and restricted using service tag with ResourceID of the Front Door. This configures the app so it is only accessible using Front Door URL.",
             "type": "String",
             "allowedValues": [
-                "Deploy Virtual Network, App Service, FrontDoor Subnet with Microsoft.Web service endpoint, Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the Front Door and restricted so only accessible using Front Door Public IP."
+                "Deploy App Service, Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. The deployed App Service will become the backend to the Front Door and restricted using service tag with ResourceID of the Front Door. This configures the app so it is only accessible using Front Door URL."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."
-            }
-        },
-        "virtualNetworkIPRange": {
-            "defaultValue": "192.168.0.0/16",
-            "type": "String",
-            "allowedValues": [
-                "192.168.0.0/16",
-                "10.0.0.0/16",
-                "10.10.0.0/16",
-                "10.100.0.0/16"
-            ],
-            "metadata": {
-                "description": "This is the IP Range for the virtual network in which the Azure Front Door and Web App will reside."
             }
         },
         "deploymentPurpose": {

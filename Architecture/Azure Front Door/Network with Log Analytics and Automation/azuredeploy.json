@@ -3,36 +3,23 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "templateVersion": {
-            "defaultValue": "20220211.0832",
+            "defaultValue": "20220216.0850",
             "type": "String",
             "allowedValues": [
-                "20220211.0832"
+                "20220216.0850"
             ],
             "metadata": {
                 "description": "This is the version of the template you are running."
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Deploy Virtual Network, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP.",
+            "defaultValue": "Requires you have an App Service. Deploy Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your existing App Service will become the backend to the Front Door and restricted using service tag with ResourceID of the Front Door. This configures the app so it is only accessible using Front Door URL.",
             "type": "String",
             "allowedValues": [
-                "Deploy Virtual Network, AppGateway Subnet with Microsoft.Web service endpoint, App Gateway, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your App Service will become the backend to the App Gateway and restricted so only accessible using App Gateway Public IP."
+                "Requires you have an App Service. Deploy Front Door, Log Analytics workspace, Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Your existing App Service will become the backend to the Front Door and restricted using service tag with ResourceID of the Front Door. This configures the app so it is only accessible using Front Door URL."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."
-            }
-        },
-        "virtualNetworkIPRange": {
-            "defaultValue": "192.168.0.0/16",
-            "type": "String",
-            "allowedValues": [
-                "192.168.0.0/16",
-                "10.0.0.0/16",
-                "10.10.0.0/16",
-                "10.100.0.0/16"
-            ],
-            "metadata": {
-                "description": "This is the IP Range for the virtual network in which the Azure App Gateway and Web App will reside."
             }
         },
         "deploymentPurpose": {
@@ -42,11 +29,25 @@
                 "description": "Short hand term used to create Azure resources."
             }
         },
-        "webAppFqdn": {
+        "appServiceName": {
             "type": "string",
-            "defaultValue": "something.azurewebsites.net",
+            "defaultValue": "appExample",
             "metadata": {
-                "description": "This deployment scenario assumes you are using App Service. If it is not App Service, you can deploy this scenario to p"
+                "description": "Resource name of the app Service that you are placing behind Front Door."
+            }
+        },
+        "appServiceFqdn": {
+            "type": "string",
+            "defaultValue": "appExample.azurewebsites.net",
+            "metadata": {
+                "description": "FQDN of the app Service that you are placing behind Front Door."
+            }
+        },
+        "appServiceLocation": {
+            "type": "string",
+            "defaultValue": "eastus",
+            "metadata": {
+                "description": "Region where your app service is deploy."
             }
         },
         "failedRunbookAlertEmail": {
@@ -66,26 +67,16 @@
     },
     "variables": {
         "networkLocation": "[resourceGroup().location]",
-        "skuTier": "WAF_v2",
         "webAppUniqueName": "[format('{0}-{1}', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
-        "virtualNetworkName": "[concat('VNet-', variables('webAppUniqueName'))]",
-        "IPBase": "[split(parameters('virtualNetworkIPRange'),'.')]",
-        "subnetAppGatewayName": "AppGatewaySubnet",
-        "subnetAppGatewayIPRange": "[format('{0}.{1}.{2}.{3}/{4}', variables('IPBase')[0], variables('IPBase')[1], '0', '0', '26')]",
-        "appGatewayName": "[concat('AppGw-', variables('webAppUniqueName'))]",
-        "appGatewayCapacity": 2,
-        "appGatewayPortName": "port_80",
-        "appGatewayPort": 80,
-        "appGatewayProtocol": "Http",
-        "appGatewayFrontEndName": "appGwPublicFrontendIp",
-        "appGatewayBackEndPoolName": "internalWebApp",
-        "appGatewayBackEndHttpSettingsName": "myHttpSetting",
-        "appGatewayHttpListenerName": "myListener",
-        "azureWafPoliciesName": "[concat('Waf-AppGw-', variables('webAppUniqueName'))]",
-        "publicIPAppGatewayName": "[concat('Pip-AzFw-', variables('webAppUniqueName'))]",
+        "frontDoorName": "[concat('frontDr', parameters('deploymentPurpose'), uniqueString(resourceGroup().id))]",
+        "frontDoorBackEndPoolName": "internalWebApp",
+        "frontDoorLoadBalanaceSettingsName": "loadBalancingSettings",
+        "frontDoorHealthProbeSettingsName": "healthProbeSettings",
+        "frontDoorRouteRulesName": "routeRules",
+        "azureWafPoliciesName": "[concat('WafFrontDr', uniqueString(resourceGroup().id))]",
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
-        "scheduleName": "UploadAzureAppGatewayLogs",
+        "scheduleName": "UploadAzureFrontDoorLogs",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
@@ -111,206 +102,215 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
                 "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
+                "[resourceId('Microsoft.Network/frontdoors', variables('frontDoorName'))]"
             ]
         },
         {
-            "type": "Microsoft.Network/virtualNetworks",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('virtualNetworkName')]",
-            "location": "[variables('networkLocation')]",
-            "properties": {
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[parameters('virtualNetworkIPRange')]"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Network/virtualNetworks/subnets",
-            "apiVersion": "2020-11-01",
-            "name": "[concat(variables('virtualNetworkName'), '/', variables('subnetAppGatewayName'))]",
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2021-02-01",
+            "name": "[concat(parameters('appServiceName'), '/web')]",
+            "location": "[parameters('appServiceLocation')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
             ],
             "properties": {
-                "addressPrefix": "[variables('subnetAppGatewayIPRange')]",
-                "serviceEndpoints": [
+                "ipSecurityRestrictions": [
                     {
-                        "service": "Microsoft.Web",
-                        "locations": [
-                            "*"
-                        ]
-                    }
-                ],
-                "delegations": [],
-                "privateEndpointNetworkPolicies": "Enabled",
-                "privateLinkServiceNetworkPolicies": "Enabled"
-            }
-        },
-        {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "apiVersion": "2020-11-01",
-            "name": "[variables('publicIPAppGatewayName')]",
-            "location": "[variables('networkLocation')]",
-            "sku": {
-                "name": "Standard",
-                "tier": "Regional"
-            },
-            "properties": {
-                "publicIPAddressVersion": "IPv4",
-                "publicIPAllocationMethod": "Static",
-                "idleTimeoutInMinutes": 4,
-                "ipTags": []
-            }
-        },
-        {
-            "type": "Microsoft.Network/applicationGateways",
-            "apiVersion": "2020-06-01",
-            "name": "[variables('appGatewayName')]",
-            "location": "[variables('networkLocation')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAppGatewayName'))]",
-                "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]",
-                "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetAppGatewayName'))]"
-            ],
-            "properties": {
-                "sku": {
-                    "name": "[variables('skuTier')]",
-                    "tier": "[variables('skuTier')]",
-                    "capacity": "[variables('appGatewayCapacity')]"
-                },
-                "gatewayIPConfigurations": [
-                    {
-                        "name": "appGatewayIpConfig",
-                        "properties": {
-                            "subnet": {
-                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetAppGatewayName'))]"
-                            }
-                        }
-                    }
-                ],
-                "frontendIPConfigurations": [
-                    {
-                        "name": "[variables('appGatewayFrontEndName')]",
-                        "properties": {
-                            "privateIPAllocationMethod": "Dynamic",
-                            "publicIPAddress": {
-                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAppGatewayName'))]"
-                            }
-                        }
-                    }
-                ],
-                "frontendPorts": [
-                    {
-                        "name": "[variables('appGatewayPortName')]",
-                        "properties": {
-                            "port": "[variables('appGatewayPort')]"
-                        }
-                    }
-                ],
-                "backendAddressPools": [
-                    {
-                        "name": "[variables('appGatewayBackEndPoolName')]",
-                        "properties": {
-                            "backendAddresses": [
-                                {
-                                    "fqdn": "[parameters('webAppFqdn')]"
-                                }
+                        "ipAddress": "AzureFrontDoor.Backend",
+                        "action": "Allow",
+                        "tag": "ServiceTag",
+                        "priority": 100,
+                        "name": "RestrictAccessToFrontDoor",
+                        "headers": {
+                            "x-azure-fdid": [
+                                "[reference(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName'))).frontdoorId]"
                             ]
                         }
+                    },
+                    {
+                        "ipAddress": "Any",
+                        "action": "Deny",
+                        "priority": 2147483647,
+                        "name": "Deny all",
+                        "description": "Deny all access"
                     }
                 ],
-                "backendHttpSettingsCollection": [
+                "scmIpSecurityRestrictions": [
                     {
-                        "name": "[variables('appGatewayBackEndHttpSettingsName')]",
-                        "properties": {
-                            "port": "[variables('appGatewayPort')]",
-                            "protocol": "[variables('appGatewayProtocol')]",
-                            "cookieBasedAffinity": "Disabled",
-                            "pickHostNameFromBackendAddress": true,
-                            "requestTimeout": 20
-                        }
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
                     }
-                ],
-                "httpListeners": [
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors",
+            "apiVersion": "2020-05-01",
+            "name": "[variables('frontDoorName')]",
+            "location": "Global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/frontdoorwebapplicationfirewallpolicies', variables('azureWafPoliciesName'))]"
+            ],
+            "properties": {
+                "resourceState": "Enabled",
+                "enabledState": "Enabled",
+                "friendlyName": "[variables('frontDoorName')]",
+                "frontendEndpoints": [
                     {
-                        "name": "[variables('appGatewayHttpListenerName')]",
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), concat('/FrontendEndpoints/', variables('frontDoorName'), '-azurefd-net'))]",
+                        "name": "[concat(variables('frontDoorName'), '-azurefd-net')]",
                         "properties": {
-                            "firewallPolicy": {
-                                "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]"
-                            },
-                            "frontendIPConfiguration": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendIPConfigurations', variables('appGatewayName'), variables('appGatewayFrontEndName'))]"
-                            },
-                            "frontendPort": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/frontendPorts', variables('appGatewayName'), variables('appGatewayPortName'))]"
-                            },
-                            "protocol": "[variables('appGatewayProtocol')]",
-                            "requireServerNameIndication": false
-                        }
-                    }
-                ],
-                "requestRoutingRules": [
-                    {
-                        "name": "myRoutingRule",
-                        "properties": {
-                            "ruleType": "Basic",
-                            "httpListener": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/httpListeners', variables('appGatewayName'), variables('appGatewayHttpListenerName'))]"
-                            },
-                            "backendAddressPool": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendAddressPools', variables('appGatewayName'), variables('appGatewayBackEndPoolName'))]"
-                            },
-                            "backendHttpSettings": {
-                                "id": "[resourceId('Microsoft.Network/applicationGateways/backendHttpSettingsCollection', variables('appGatewayName'), variables('appGatewayBackEndHttpSettingsName'))]"
+                            "resourceState": "Enabled",
+                            "hostName": "[concat(variables('frontDoorName'), '.azurefd.net')]",
+                            "sessionAffinityEnabledState": "Disabled",
+                            "sessionAffinityTtlSeconds": 0,
+                            "webApplicationFirewallPolicyLink": {
+                                "id": "[resourceId('Microsoft.Network/frontdoorwebapplicationfirewallpolicies', variables('azureWafPoliciesName'))]"
                             }
                         }
                     }
                 ],
-                "enableHttp2": false,
-                "webApplicationFirewallConfiguration": {
-                    "enabled": true,
-                    "firewallMode": "Prevention",
-                    "ruleSetType": "OWASP",
-                    "ruleSetVersion": "3.2",
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100
+                 "backendPools": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/BackendPools/', variables('frontDoorBackEndPoolName'))]",
+                        "name": "[variables('frontDoorBackEndPoolName')]",
+                        "properties": {
+                            "resourceState": "Enabled",
+                            "backends": [
+                                {
+                                    "address": "[concat(parameters('appServiceFqdn'))]",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 50,
+                                    "backendHostHeader": "[concat(parameters('appServiceFqdn'))]",
+                                    "enabledState": "Enabled"
+                                }
+                            ],
+                            "loadBalancingSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/loadBalancingSettings/', variables('frontDoorLoadBalanaceSettingsName'))]"
+                            },
+                            "healthProbeSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/healthProbeSettings/', variables('frontDoorHealthProbeSettingsName'))]"
+                            }
+                        }
+                    }
+                ],
+                "backendPoolsSettings": {
+                    "enforceCertificateNameCheck": "Enabled",
+                    "sendRecvTimeoutSeconds": 30
                 },
-                "firewallPolicy": {
-                    "id": "[resourceId('Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies', variables('azureWafPoliciesName'))]"
-                }
+                "loadBalancingSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/loadBalancingSettings/', variables('frontDoorLoadBalanaceSettingsName'))]",
+                        "name": "[variables('frontDoorLoadBalanaceSettingsName')]",
+                        "properties": {
+                            "resourceState": "Enabled",
+                            "sampleSize": 4,
+                            "successfulSamplesRequired": 2,
+                            "additionalLatencyMilliseconds": 0
+                        }
+                    }
+                ],
+                "healthProbeSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/healthProbeSettings/', variables('frontDoorHealthProbeSettingsName'))]",
+                        "name": "[variables('frontDoorHealthProbeSettingsName')]",
+                        "properties": {
+                            "resourceState": "Enabled",
+                            "path": "/",
+                            "protocol": "Https",
+                            "intervalInSeconds": 30,
+                            "enabledState": "Enabled",
+                            "healthProbeMethod": "Get"
+                        }
+                    }
+                ],
+                "routingRules": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/RoutingRules/httpToHttpsRedirect')]",
+                        "name": "httpToHttpsRedirect",
+                        "properties": {
+                            "routeConfiguration": {
+                                "redirectType": "Found",
+                                "redirectProtocol": "HttpsOnly",
+                                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorRedirectConfiguration"
+                            },
+                            "resourceState": "Enabled",
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), concat('/FrontendEndpoints/', variables('frontDoorName'), '-azurefd-net'))]"
+                                }
+                            ],
+                            "acceptedProtocols": [
+                                "Http"
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ],
+                            "enabledState": "Enabled"
+                        }
+                    },
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/RoutingRules/', variables('frontDoorRouteRulesName'))]",
+                        "name": "[variables('frontDoorRouteRulesName')]",
+                        "properties": {
+                            "routeConfiguration": {
+                                "forwardingProtocol": "HttpsOnly",
+                                "backendPool": {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), '/BackendPools/', variables('frontDoorBackEndPoolName'))]"
+                                },
+                                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration"
+                            },
+                            "resourceState": "Enabled",
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', variables('frontDoorName')), concat('/FrontendEndpoints/', variables('frontDoorName'), '-azurefd-net'))]"
+                                }
+                            ],
+                            "acceptedProtocols": [
+                                "Https"
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ],
+                            "enabledState": "Enabled"
+                        }
+                    }
+                ]
             }
         },
         {
-            "type": "Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies",
-            "apiVersion": "2020-06-01",
+            "type": "Microsoft.Network/frontdoorwebapplicationfirewallpolicies",
+            "apiVersion": "2020-11-01",
             "name": "[variables('azureWafPoliciesName')]",
-            "location": "[variables('networkLocation')]",
+            "location": "Global",
+            "sku": {
+                "name": "Classic_AzureFrontDoor"
+            },
             "properties": {
-                "customRules": [],
                 "policySettings": {
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100,
-                    "state": "Enabled",
-                    "mode": "Prevention"
+                    "enabledState": "Enabled",
+                    "mode": "Prevention",
+                    "customBlockResponseStatusCode": 403,
+                    "requestBodyCheck": "Enabled"
                 },
                 "managedRules": {
-                    "exclusions": [],
                     "managedRuleSets": [
                         {
-                            "ruleSetType": "OWASP",
-                            "ruleSetVersion": "3.2",
-                            "ruleGroupOverrides": []
+                            "ruleSetType": "Microsoft_DefaultRuleSet",
+                            "ruleSetVersion": "1.1",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
                         },
                         {
                             "ruleSetType": "Microsoft_BotManagerRuleSet",
-                            "ruleSetVersion": "0.1",
-                            "ruleGroupOverrides": []
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
                         }
                     ]
                 }
@@ -411,7 +411,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureFrontDoor" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -432,7 +432,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureFrontDoor" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -445,7 +445,7 @@
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
                 "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
                 "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
+                "[resourceId('Microsoft.Network/frontdoors', variables('frontDoorName'))]"
             ]
         },
         {
@@ -588,12 +588,12 @@
             }
         },
         {
-            "type": "Microsoft.Network/applicationGateways/providers/diagnosticSettings",
-            "name": "[concat(variables('appGatewayName'),'/microsoft.insights/', variables('diagSettingsName'))]",
+            "type": "Microsoft.Network/frontdoors/providers/diagnosticSettings",
+            "name": "[concat(variables('frontDoorName'),'/microsoft.insights/', variables('diagSettingsName'))]",
             "apiVersion": "2021-05-01-preview",
             "dependsOn": [
                 "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
-                "[resourceId('Microsoft.Network/applicationGateways', variables('appGatewayName'))]"
+                "[resourceId('Microsoft.Network/frontdoors', variables('frontDoorName'))]"
             ],
             "properties": {
                 "name": "DiagService",
@@ -603,7 +603,7 @@
                 "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]",
                 "logs": [
                     {
-                        "category": "ApplicationGatewayAccessLog",
+                        "category": "FrontdoorAccessLog",
                         "enabled": true,
                         "retentionPolicy": {
                             "days": 10,
@@ -611,15 +611,7 @@
                         }
                     },
                     {
-                        "category": "ApplicationGatewayPerformanceLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "days": 10,
-                            "enabled": false
-                        }
-                    },
-                    {
-                        "category": "ApplicationGatewayFirewallLog",
+                        "category": "FrontdoorWebApplicationFirewallLog",
                         "enabled": true,
                         "retentionPolicy": {
                             "days": 10,
