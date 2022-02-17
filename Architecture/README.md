@@ -6,7 +6,6 @@
 - Deploy a suite of services that leverage Azure Application Gateway, regional load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
 - Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
 
-
 **Azure Firewall**
 - Deploy a suite of services that leverage Azure Firewall, scalable layer 4 firewall, to provide direct access to an Azure-based application. 
 - Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
