@@ -1,38 +1,35 @@
 # Architecture Contents
-## Azure Active Directory
-Deploy an automated service to deliver Azure Active Directory logs to CISA CLAW. This supports the TIC 3.0 compliance for authentication and sign-in logs.
+**Azure Active Directory**
+- Deploy an automated service to deliver Azure Active Directory logs to CISA CLAW. This supports the TIC 3.0 compliance for authentication and sign-in logs.
 
-## Azure Application Gateway
-Deploy a suite of services that leverage Azure Application Gateway, regional load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
+**Azure Application Gateway**
+- Deploy a suite of services that leverage Azure Application Gateway, regional load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
+- Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
 
-Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
 
-## Azure Firewall
-Deploy a suite of services that leverage Azure Firewall, scalable layer 4 firewall, to provide direct access to an Azure-based application. 
+**Azure Firewall**
+- Deploy a suite of services that leverage Azure Firewall, scalable layer 4 firewall, to provide direct access to an Azure-based application. 
+- Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
 
-Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
+**Azure Front Door**
+- Deploy a suite of services that leverage Azure Front Door, global load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
+- Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
 
-## Azure Front Door
-Deploy a suite of services that leverage Azure Front Door, global load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
+**Images**
+- Contains images used throughout the articles in this repo.
 
-Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
+**NetFlow Logs**
+- Deploy an automated service to deliver NetFlow logs to CISA CLAW. This supports the TIC 3.0 compliance for NetFlow logs.
 
-## Images
-Contains images used throughout the articles in this repo.
+**Post Deployment Tasks**
+- Article that defines list of tasks following deployment of scenarios.
 
-## NetFlow Logs
-Deploy an automated service to deliver NetFlow logs to CISA CLAW. This supports the TIC 3.0 compliance for NetFlow logs.
+**Prerequisite Tasks**
+- Article that defines list of tasks that need to happen before deployment of scenarios.
 
-## Post Deployment Tasks
-Article that defines list of tasks following deployment of scenarios.
+**Third-party Firewall**
+- Deploy an automated service to deliver third-party firewalls, layer 4 firewall, to provide direct access to an Azure-based application. 
+- Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
 
-## Prerequisite Tasks
-Article that defines list of tasks that need to happen before deployment of scenarios.
-
-## Third-party Firewall
-Deploy an automated service to deliver third-party firewalls, layer 4 firewall, to provide direct access to an Azure-based application. 
-
-Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
-
-## Visio
-Architecture for all scenarios and solutiosn in Visio document.
+**Visio**
+- Architecture for all scenarios and solutions in Visio document.
