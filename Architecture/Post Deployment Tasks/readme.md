@@ -2,6 +2,8 @@
 
 The following tasks needs to be performed. These are the tasks that an ARM template cannot perform and requires manual effort. 
 
+NOTE: Updates to the deployment scenarios migrated the solutions from using app registrations to managed identities! Now the deployment scenarios handle assigning permissions. 
+
 ## All Deployment Scenarios
 
 - [Update Automation account variables with your unique values](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#update-automation-account-variables) 

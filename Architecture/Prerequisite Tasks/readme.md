@@ -2,6 +2,8 @@
 
 There are a few tasks that must be performed before deploying your TIC 3.0 compliant solution. Some of the tasks are local to your environment while others require engaging with CISA to request access to a CLAW resource.
 
+NOTE: Updates to the deployment scenarios migrated the solutions from using app registrations to managed identities! Now the deployment scenarios handle assigning permissions. 
+
 ## Requirements for all Architecture Solutions
 
 You must have the following before deployment:
