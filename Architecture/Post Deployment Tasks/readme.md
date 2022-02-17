@@ -1,179 +1,114 @@
 # Post Deployment Tasks
 
-The following needs to be performed, for all solutions, once deployment is complete. These are the tasks that an ARM template cannot perform and requires manual effort. 
+The following tasks needs to be performed. These are the tasks that an ARM template cannot perform and requires manual effort. 
 
-- [Add registered application with reader role to Log Analytics workspace (LAW)](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#add-reader-role)
-- **OPTIONAL** - [Send Azure AD logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)
-  - Support the access/auth log control.
+## All Deployment Scenarios
 
-- **OPTIONAL** - [Send NetFlow logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)
-  - Supports NetFlow log control.
-
-- [Link schedule to runbook](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-schedule-to-runbook)
 - [Update Automation account variables with your unique values](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#update-automation-account-variables) 
   - CISA provided CLAW S3 access key
   - CISA provided CLAW S3 access secret
-  - Unique S3 bucket name
+  - CISA provided CLAW S3 bucket name
   - LAW ID
+    - This is automatically updated by the deployment scenario, if it is incorrect - then update.
   - Tenant ID
-  - Registered app ID
-  - Registered app secret 
+    - This is automatically updated by the deployment scenario, if it is incorrect - then update.
 
-## Add reader role
+## Specific Deployment Scenario Tasks
 
-The Log Analytics workspace must be created before you can give the registered application the reader role. This role allows the registered application service principle read-only access to the resource like executing queries.
+- Azure Firewall Scenario
+- Azure Application Gateway Scenario
+- Azure Front Door Scenario
 
-![Log Analytics workspace Access control](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145061916-48acf8e5-f3f5-473c-879e-2c34baacc7f2.PNG)
+### Azure Firewall Scenario
 
-![Role assignment](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145061980-1dc67638-13c7-4c25-9f7a-120e1c01205e.PNG)
+For the solutions that deploy an Azure Firewall, you must associate Azure Firewall Public IP with a FQDN. This can be performed by updating a publicly accessible A record, creating an internally accessible A record, or updating local host file. The Azure Firewall creates a NAT rule that allows you to access the application on port 5443.
 
-![Select members](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062049-a22b2400-7406-44b3-a7f7-6176a31e161c.PNG)
+NOTE: You MUST access the Azure PaaS applications through the Firewall using a FQDN in the browser, IP addresses in the browser will fail.
 
-![Description](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062154-6a2b7f11-f876-45cb-83f3-570d6462fa21.PNG)
+#### Get the public IP of your Azure Firewall
 
-![Review and assign](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062284-5ba8b1df-5a37-4456-b542-f345cbe1a0b0.png)
+![image-20220217135450240](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217135450240.png)
 
-1. Go to the Log Analytics Workspace that will receive the Azure Firewall Diagnostic Settings logs.
-2. Select **Access control (IAM)**
-3. Select **+ Add**
-4. Select **Add role assignment**
-5. Select **Reader**
-6. Select **Next**
-7. Select **+ Select members**
-8. Search for the Registered Application created earlier
-   1. This example used, UploadToCLAW
-9. Select the Application
-10. Select **Select**
-11. Enter a description
-    1. This example used, Used to execute queries for firewall logs to upload to CLAW
-12. Select **Review + assign**
-13. Select **Review + assign**
+![image-20220217142101414](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217142101414.png)
 
-## Send Azure AD logs to Log Analytics workspace
+1. Navigate to the Azure Firewall.
+2. Select the URL associated with the Firewall public IP value.
+3. Document/copy the public IP address.
 
-When proceeding through the steps in the following Guide, use the recently created or pre-existing Log Analytics workspace associated with the deployed resources.
+#### OPTION 1 - Update Local Host File
 
-![Azure AD Diagnostic settings](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146437732-d820efc6-4673-4ca9-8dd5-08302fd50b5e.PNG)
+This is good for the solutions you are testing or to quickly validate the Azure Firewall configuration. 
 
-![Configure Diagnostic settings](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146437804-69bbb552-a1b7-4d58-8778-1c0895485e7c.png)
+![img](file:///C:/Users/PAULLI~1/AppData/Local/Temp/SNAGHTML656d3e8.PNG)
 
-1. Visit your Azure Active Directory blade
-2. Scroll down and select **Diagnostic settings** from the left menu
-3. Select **+ Add diagnostic settings**
-4. Check each box in Logs / Categories
-5. Select the check box for **Send to Log Analytics workspace**
-   1. Select the recently created or pre-existing Log Analytics workspace
-6. Select **Save**
+![image-20220217140354570](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217140354570.png)
 
-[Stream Azure Active Directory logs to Azure Monitor logs | Microsoft Docs](https://docs.microsoft.com/en-us/azure/active-directory/reports-monitoring/howto-integrate-activity-logs-with-log-analytics)
+1. Navigate to C:\Windows\Systems32\drivers\etc
+2. Open the hosts file
+3. Add the public IP address
+4. Enter a space or a tab, then add the FQDN
 
-Once you setup Azure AD diagnostic settings, then you are ready to link a schedule to the Runbook so that it collects the logs and sends them to the CLAW.
+#### OPTION 2 - Create Public A record
 
-- Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter).
+If you are using Azure DNS, then follow this URL to create a new A record using the Public IP of your Firewall
 
-## Send NetFlow logs to Log Analytics workspace
+[Manage DNS record sets and records with Azure DNS | Microsoft Docs](https://docs.microsoft.com/en-us/azure/dns/dns-operations-recordsets-portal#:~:text=Update a record 1 On the Record set,the notification that the record has been saved.)
 
-This process is a little complicated but the following guide does a great job outlining the steps.
+#### OPTION 3 - Create Internal A record
 
-- [Azure traffic analytics | Microsoft Docs](https://docs.microsoft.com/en-us/azure/network-watcher/traffic-analytics)
+Coordinate with administration team that manages your enterprise DNS and request they associate your Azure Firewall's public IP with some FQDN.
 
-Once you setup NetFlow logs with Network Security Groups, then you are ready to link a schedule to the Runbook so that it collects the logs and sends them to the CLAW.
+#### Navigate to application in browser
 
-- Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter).
+Open a browser and use the URL
 
-## Link schedule to runbook
+"https://" + FQDN + ":5443"
 
-The Runbook was created and published and the schedules were created with the ARM template; however, they need to be linked. The schedules are linked based on which logs to collect. Each schedule link will use a schedule and set a parameter to 'true'. 
+![image-20220217140905712](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217140905712.png)
 
-- If you deployed a new or used a pre-existing Azure Firewall.
-  - Use the [Default schedule Link](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#default-schedule-link)
-- If you are using a Third-party Firewall like a Palo Alto NVA or Cisco NVA .
-  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
-- If you setup Azure AD to send logs to the LAW ([Send Azure AD logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-azure-ad-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send Azure AD logs to the CLAW.
-  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
-- If you setup NetFlow to send logs to the LAW ([Send NetFlow logs to Log Analytics workspace](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#send-netflow-logs-to-log-analytics-workspace)) then you want to also link an additional schedule that will send NetFlow logs to the CLAW.
-  - Use the [Link additional schedules with parameters](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post%20Deployment%20Tasks#link-additional-schedules-with-parameter)
 
-NOTE: Each schedule should only collect the logs for a single purpose, though it is possible to set multiple parameters to 'true', running them together adds complexity and failure to collect one of the logs would cause remaining logs to fail too.
 
-### Default schedule link
+### Azure Application Gateway Scenario
 
-![Runbooks](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062436-0f99c019-e8be-466e-88e4-535a299dbf61.PNG)
+The Application Gateway scenario does not require creating an A record to access the application. All you need to do is collect the public IP of the Application Gateway and use it in the browser to access the application.
 
-![Link to schedule](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062503-7cea21a0-fba3-4b75-9929-346e0dcff67f.png)
+#### Get the public IP of your Azure Application Gateway
 
-![Schedule runbook overview](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062574-47e71285-a2aa-4d27-af66-6a963b11aab4.png)
+![img](file:///C:/Users/PAULLI~1/AppData/Local/Temp/SNAGHTML66854ce.PNG)
 
-![Select schedule](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062630-1a4afe55-7fb2-415c-89f6-5d89e33bf501.png)
+1. Navigate to the Azure Application Gateway.
+2. Document/copy the public IP address.
 
-![Approve selection](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062728-d0592fd3-0e82-43e8-9605-ad95d2d9eb1f.png)
+#### Navigate to application in browser
 
-![Verify](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062809-6a9bdbc9-cc26-45aa-b489-85c5fdb2c9d9.PNG)
+Open a browser and use the URL
 
-1. Go to the Automation account created during deployment
-2. Select **Runbooks**
-3. Select the runbook named **UploadToCLAWS3**
-4. Select **Link to schedule**
-5. Select **Link a schedule to your runbook**
-6. Select **HourlyUploadsToCLAW**
-7. Select **OK**
-8. From within the UploadToCLAWS3 blade, select **Schedules** from the right hand menu
-9. Verify the schedule exists
-   1. Depending on how quick you select through the menus, you may need to wait a minute for the schedule to show up
+"https://" + Public_IP_Address
 
-### Link additional schedules with parameter
+![image-20220217141651264](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217141651264.png)
 
-The parameters and run settings will be used to change which logs are collected and uploaded by the runbook.
+### Azure Front Door Scenario
 
-NOTE: Each schedule should only collect the logs for a single purpose, though it is possible to set multiple parameters to 'true', running them together adds complexity and failure to collect one of the logs would cause remaining logs to fail too.
+The Front Door scenario does not require creating an A record to access the application. All you need to do is collect the URL of the Front Door and use it in the browser to access the application.
 
-![Runbooks](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062436-0f99c019-e8be-466e-88e4-535a299dbf61.PNG)
+#### Get the public IP of your Azure Application Gateway
 
-![Link to schedule](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062503-7cea21a0-fba3-4b75-9929-346e0dcff67f.png)
+![image-20220217141928680](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217141928680.png)
 
-![Schedule runbook overview](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062574-47e71285-a2aa-4d27-af66-6a963b11aab4.png)
+1. Navigate to the Azure Application Gateway.
+2. Document/copy the public IP address.
 
-![Select schedule](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/145062630-1a4afe55-7fb2-415c-89f6-5d89e33bf501.png)
+#### Navigate to application in browser
 
-![Select Configure parameters and run settings](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146452556-2f6db367-2ab0-4fcb-be98-00a4bc6af377.png)
+Open a browser and use the URL
 
-![Set paramters](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146452635-0ade8a0e-85cc-44c5-afd3-3fe1cb65d821.PNG)
+"https://" + Public_IP_Address
 
-![Select OK](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146452678-12ab40b6-7c80-47da-978e-657205681ff4.png)
-
-![Verify](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/146452720-2f6b64a9-e425-431d-b95d-2598a531e734.PNG)
-
-1. Go to the Automation account created during deployment
-
-2. Select **Runbooks**
-
-3. Select the runbook named **UploadToCLAWS3**
-
-4. Select **Link to schedule**
-
-5. Select **Link a schedule to your runbook**
-
-6. Select one of the HourlyUploadsToCLAW schedules available, five were deployed for you.
-
-7. Select **Configure parameters and run settings**
-
-8. You must fill in 'true' in only 1 of the parameters. You will link additional schedules for each of the parameters you want to set to 'true'. NOTE: 'true' MUST BE ALL LOWERCASE.
-
-   A. If you are using a Third-party Firewall, then you will enter 'true' in this input box. 
-
-   B. If you want to send Azure AD Auth logs to support Auth/Access logs to CLAW, then you will enter 'true' in this input box.
-
-   C. If you want to send NetFlow logs to CLAW, then you will enter 'true' in this input box.
-
-9. Select **OK**
-10. Select **OK**
-11. From within the UploadToCLAWS3 blade, select **Schedules** from the right hand menu
-12. Verify that multiple schedules exist.
-    1. There will be a schedule for each parameter that you set to 'true'
+![image-20220217142014115](C:\Users\paullizer\AppData\Roaming\Typora\typora-user-images\image-20220217142014115.png)
 
 ## Update Automation account variables
 
-The ARM template created variables that are used by the runbook to access the Log Analytics workspace using the application's service principle. Some variables will need to be updated over time. The registered application secret and the CLAW secrets will expire. It is important to renew the registered application secret and coordinate receipt of a new CLAW secret before they expire.
+The ARM template created variables that are used by the runbook to access the Log Analytics workspace using the application's service principle. Some variables will need to be updated over time. The CLAW secrets will expire. It is important to coordinate receipt of a new CLAW secret before it expires.
 
 The variables are encrypted. This means that you or anyone cannot view them from portal or consoles. They can only be decrypted from within a runbook. When you update a variable because a secret is expiring or you want to use a different Log Analytics workspace, you just edit the value which overwrite the existing when you save it.
 
@@ -195,9 +130,7 @@ This example walks through updating the AWSAccessKey, repeat the steps for each 
 
 ## Ready for uploading logs to CLAW
 
-If you used the complete solution, then you are generating logs on your Azure firewall. If you used another solution and have your application traversing your Azure firewall then you are generating logs.
-
-In both scenarios, Azure firewall logs are sent to the Log Analytics workspace. Every 60 minutes, starting 1 hour after the deployment, Azure Automation will query the Log Analytics workspace and send the query in JSON format to the CLAW.
+Logs from your deployed scenario will be uploaded to the CLAW started 1 hour after the deployed scenario and then every 30 minutes.
 
 ## Related Resources
 
