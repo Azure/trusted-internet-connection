@@ -96,6 +96,7 @@ This deployment scenario will deploy and update the following:
 - Deploy Automation Account
 - Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace
 - Deploy Alert
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure%2520Firewall%2FComplete%2Fazuredeploy.json)
 
 ![Complete Solution](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368081-3db55d08-9b04-4ab8-ab12-8b69cd3692c6.png)
