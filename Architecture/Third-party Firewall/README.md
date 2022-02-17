@@ -1,7 +1,5 @@
-# TIC 3.0 for Third-party Firewalls, aka Network Virtual Appliance (NVA)
-
-## Automation account only (common deployment scenario)
-
+# TIC 3.0 Deployment Scenario for Third-party Firewalls, aka Network Virtual Appliance (NVA)
+## Automation account only (most common deployment scenario)
 ### Requirements
 The following must be performed before using this deployment scenario:
 - Deployed Third-party firewall

@@ -1,7 +1,5 @@
-# TIC 3.0 for Azure Active Directory
-
-## Automation account only (common deployment scenario)
-
+# TIC 3.0 Compliance for Azure Active Directory (TIC 3.0 authentication logging)
+## Automation account only (most common deployment scenario)
 ### Requirements
 The following must be performed before using this deployment scenario:
 - Azure Active Directory (AD)

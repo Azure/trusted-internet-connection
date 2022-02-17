@@ -1,11 +1,8 @@
-# TIC 3.0 for Azure Firewall
-
-
-## Deployment Scenarios
-#### Log Analytics + Automation account (most common deployment scenario)
+# TIC 3.0 Deployment Scenarios for Azure Firewall
+## Log Analytics + Automation account (most common deployment scenario)
 This is good if you already have applications, VNETs, and an Azure Firewall. This will deploy a Log Analytics workspace and the appropriate automation to send logs to CLAW.
 
-#### Requirements
+### Requirements
 The following must be performed before using this deployment scenario:
 - Deployed Virtual Network with subnets for application and an Azure Firewall
 - Deployed Azure Firewall
@@ -14,7 +11,7 @@ The following must be performed before using this deployment scenario:
 - Application running in Azure
 - Azure Firewall routes traffic to the application so that users must use a URL associated with the public IP of the Azure Firewall to connect to the application
 
-#### Deploys and Updates
+### Deploys and Updates
 This deployment scenario will deploy and update the following:
 - Deploy Log Analytics workspace
 - Deploy Automation Account
@@ -26,9 +23,9 @@ This deployment scenario will deploy and update the following:
 
 ![Log Analytics + Automation account](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368776-27f1ec73-01e8-4d08-b557-edeff6a3f04e.png)
 
-#### Automation account only (common deployment scenario)
+## Automation account only (common deployment scenario)
 
-#### Requirements
+### Requirements
 The following must be performed before using this deployment scenario:
 - Deployed Virtual Network with subnets for application and an Azure Firewall
 - Deployed Azure Firewall
@@ -39,7 +36,7 @@ The following must be performed before using this deployment scenario:
 - Azure Firewall routes traffic to the application so that users must use a URL associated with the public IP of the Azure Firewall to connect to the application
 - Configured Azure Firewall Diagnostic Settings to send logs and metrics to Log Analytics workspace
 
-#### Deploys and Updates
+### Deploys and Updates
 This deployment scenario will deploy and update the following:
 - Deploy Automation Account
 - Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace
@@ -49,17 +46,17 @@ This deployment scenario will deploy and update the following:
 
 ![Automation account Only](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
 
-#### Network + Log Analytics + Automation account
+## Network + Log Analytics + Automation account
 This is good if you have an application in Azure and you want to configure it so users can route do it directly in Azure instead from on-premesis through MTIPS/TIC 2.0 solution.
 
-#### Requirements
+### Requirements
 The following must be performed before using this deployment scenario:
 - Deployed Virtual Network with subnet for application
 - Available IP address in existing Virtual Network
 - Defined IP range for Azure Firewall, at minimum /26
 - Application running in Azure
 
-#### Deploys and Updates
+### Deploys and Updates
 This deployment scenario will deploy and update the following:
 - Deploy subnet for Azure Firewall
 - Deploy Azure Firewall
@@ -77,15 +74,14 @@ This deployment scenario will deploy and update the following:
 
 ![Network + Log Analytics + Automation](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368518-8bdd635d-9e44-4c34-b666-d3d2ad11dd21.png)
 
-
-#### Complete
+## Complete
 This is good to for a POC, testing, or to test CISA provided CLAW credentials.
 
-#### Requirements
+### Requirements
 The following must be performed before using this deployment scenario:
 - None, solution will deploy as an isolated resource from existing Azure resources.
 
-#### Deploys and Updates
+### Deploys and Updates
 This deployment scenario will deploy and update the following:
 - Deploy Virtual Network with subnet for application and an Azure Firewall
 - Deploy subnet for Azure Firewall

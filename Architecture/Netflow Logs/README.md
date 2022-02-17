@@ -1,7 +1,5 @@
-# TIC 3.0 for Netflow Logs
-
-## Automation account only (common deployment scenario)
-
+# TIC 3.0 Complaince for Netflow Logs
+## Automation account only (most common deployment scenario)
 ### Requirements
 The following must be performed before using this deployment scenario:
 - Deployed Network Security Groups (NSG).
