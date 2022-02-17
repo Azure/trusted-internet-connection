@@ -13,10 +13,10 @@
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Require you deploy Network Security Groups, associate them with priviate endpoints, subnets, or a virutal network, enabled NetFlow log collection on the Network Security Groups, and configured their Diagnostic Settings to send logs and metrics to a Log Analytics workspace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on Azure Firewall to send logs to Log Analytics workspace.",
+            "defaultValue": "Requires you deploy Network Security Groups, associate them with priviate endpoints, subnets, or a virutal network, enabled NetFlow log collection on the Network Security Groups, and configured their Diagnostic Settings to send logs and metrics to a Log Analytics workspace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on the NSGs to send logs to Log Analytics workspace.",
             "type": "String",
             "allowedValues": [
-                "Require you deploy Network Security Groups, associate them with priviate endpoints, subnets, or a virutal network, enabled NetFlow log collection on the Network Security Groups, and configured their Diagnostic Settings to send logs and metrics to a Log Analytics workspace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on Azure Firewall to send logs to Log Analytics workspace."
+                "Requires you deploy Network Security Groups, associate them with priviate endpoints, subnets, or a virutal network, enabled NetFlow log collection on the Network Security Groups, and configured their Diagnostic Settings to send logs and metrics to a Log Analytics workspace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on the NSGs to send logs to Log Analytics workspace."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."

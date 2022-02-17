@@ -365,7 +365,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2021-04-01",
-            "name": "NestedTemplate-AzureFirewallDiagnsoticSettings",
+            "name": "NestedTemplate-ApplicationGatewaysDiagnsoticSettings",
             "resourceGroup": "[parameters('appGatewayResourceGroupName')]",
             "properties": {
                 "mode": "Incremental",
