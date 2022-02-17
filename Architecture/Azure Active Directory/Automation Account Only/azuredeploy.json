@@ -13,10 +13,10 @@
             }
         },
         "deploymentScenario": {
-            "defaultValue": "Requires you have a syslog forwarding server, third-party firewall, aka Network Virtual Appliance (NVA), with its logs configured to send in syslog format to the syslog forwarding server. Requires a Log Analytics workspace. Requires the Log Analytics agent is installed on the syslog forwarding server and it is configured to send syslogs to the Log Analytics workspace.Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on Azure Firewall to send logs to Log Analytics workspace.",
+            "defaultValue": "Requires you have an Azure Active Directory and it's Diganostic Settings are configured to send all logs and metrics to a Log Analytics workpsace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert.",
             "type": "String",
             "allowedValues": [
-                "Requires you have a syslog forwarding server, third-party firewall, aka Network Virtual Appliance (NVA), with its logs configured to send in syslog format to the syslog forwarding server. Requires a Log Analytics workspace. Requires the Log Analytics agent is installed on the syslog forwarding server and it is configured to send syslogs to the Log Analytics workspace.Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert. Updates Diagnostic Setting on Azure Firewall to send logs to Log Analytics workspace."
+                "Requires you have an Azure Active Directory and it's Diganostic Settings are configured to send all logs and metrics to a Log Analytics workpsace. Deploy Automation Account, Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace, and Alert."
             ],
             "metadata": {
                 "description": "Describes the purpose and resources to be deployed."
@@ -24,7 +24,7 @@
         },
         "deploymentPurpose": {
             "type": "string",
-            "defaultValue": "tic30-thirdPartyFirewall",
+            "defaultValue": "tic30-azureADLogs",
             "metadata": {
                 "description": "Name will be used to create Azure Resources"
             }
@@ -163,7 +163,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
                 "parameters": {
-                    "logThirdpartyFirewall" : "true"
+                    "logAzureADAuth" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -184,7 +184,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
                 "parameters": {
-                    "logThirdpartyFirewall" : "true"
+                    "logAzureADAuth" : "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
