@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.12
+    1.13
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -211,7 +211,7 @@ catch {
 }
 
 try {
-    Write-Output "Setting AWS Region to" $AWSRegion
+    Write-Output ("Setting AWS Region to" + $AWSRegion)
     Set-DefaultAWSRegion -Region $AWSRegion | out-null
 }
 catch {
