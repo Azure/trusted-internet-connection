@@ -195,11 +195,27 @@ catch {
 }
 
 try {
+    $AWSRegion = Get-AutomationVariable -Name AWSRegion
+}
+catch {
+    Write-Error "Failed to collect S3BucketName, please verify variable exists in the same Automation Account in which this script was run."
+}
+
+try {
     Write-Output "Connecting to Azure Account as Automation Account Managed Identity."
     Connect-AzAccount -Identity -TenantId $TenantId | out-null
 }
 catch {
     Write-Error "Failed to connect to Azure. Verify Managed Identity for Automation Account is assigned Log Analytics Reader to your Log Analytics workspace, or verify the the Az.Account module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+    Exit 0
+}
+
+try {
+    Write-Output "Setting AWS Region to" $AWSRegion
+    Set-DefaultAWSRegion -Region $AWSRegion | out-null
+}
+catch {
+    Write-Error "Failed to set AWS Region. Please verify there is a value in the varible AWSRegion and that it is the correct region. This is a fatal error and will exit the script."
     Exit 0
 }
 
