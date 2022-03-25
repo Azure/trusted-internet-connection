@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.10
+    1.11
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -222,6 +222,7 @@ if ($logThirdpartyFirewall){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -250,6 +251,7 @@ if ($logAzureADAuth){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -303,6 +305,7 @@ if ($logNetflow){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -349,6 +352,7 @@ if ($logAzureFrontDoor){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
@@ -438,6 +442,7 @@ if ($logAzureAppGateway){
     }
     else {
         Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        $collectedLogs = $true
     }
 }
 
