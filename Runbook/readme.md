@@ -12,9 +12,9 @@
     1. With Encrypted Variables
         1. AWSAccessKey (ENCRYPTED)
         2. AWSSecretKey (ENCRYPTED)
-        3. LogAnalyticWorkspaceID (ENCRYPTED)
+        3. LogAnalyticWorkspaceID
         4. S3BucketName (ENCRYPTED)
-        5. TenantID (ENCRYPTED)
+        5. TenantId
     2. With additional PowerShell Modules
         1. AWSPowerShell
   
