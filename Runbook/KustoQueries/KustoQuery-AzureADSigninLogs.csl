@@ -1,16 +1,14 @@
-SigninLogs 
-    | where TimeGenerated > ago(30m) 
-    | project 
-        Category,
-        TimeGenerated,
-        OperationName,
-        UserDisplayName,
-        Identity,
-        UserPrincipalName,
-        AppDisplayName,
-        AppId,
-        ResourceDisplayName,
-        AuthenticationDetails,
-        AuthenticationProcessingDetails,
-        ConditionalAccessPolicies,
-        DeviceDetail
+AuditLogs
+| union SigninLogs
+| union AADNonInteractiveUserSignInLogs
+| union AADServicePrincipalSignInLogs
+| union AADManagedIdentitySignInLogs
+| union AADProvisioningLogs
+| union ADFSSignInLogs
+| union AADRiskyUsers
+| union AADUserRiskEvents
+| union AADRiskyServicePrincipals
+| union AADServicePrincipalRiskEvents
+| where TimeGenerated > ago(15m)
+    | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+    | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')

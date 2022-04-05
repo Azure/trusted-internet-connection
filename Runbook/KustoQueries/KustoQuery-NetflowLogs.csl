@@ -1,41 +1,11 @@
-let Category = 'NetFlow';
 AzureNetworkAnalytics_CL
+| where TimeGenerated > ago(15m)
 | where SubType_s == 'FlowLog'
-    and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
-| where TimeGenerated > ago(30m) 
-| extend VMFields  = split(VM1_s, '/')
-| extend VMName  = tostring(VMFields[1]) 
-| extend FlowType = tostring(FlowType_s), 
-    SourceIP = tostring(SrcIP_s),
-    TargetIP = tostring(DestIP_s),
-    TartgetPort = tostring(DestPort_d),
-    L4Protocol = tostring(L4Protocol_s),
-    L7Protocol = tostring(L7Protocol_s),
-    FlowDirection = tostring(FlowDirection_s),
-    AllowedOutFlows = tostring(AllowedOutFlows_d),
-    DeniedOutFlows = tostring(DeniedOutFlows_d),
-    OutboundBytes = tostring(OutboundBytes_d),
-    InboundBytes = tostring(InboundBytes_d),
-    OutboundPackets = tostring(OutboundPackets_d),
-    InboundPackets = tostring(InboundPackets_d),
-    AzureRegion = tostring(AzureRegion_s),
-    Region = tostring(Region1_s)
-| project
-    Category,
-    TimeGenerated,
-    VMName,
-    FlowDirection,
-    FlowType,
-    SourceIP,
-    TargetIP,
-    TartgetPort,
-    L4Protocol,
-    L7Protocol,
-    AllowedOutFlows,
-    DeniedOutFlows,
-    OutboundBytes,
-    InboundBytes,
-    OutboundPackets,
-    InboundPackets,
-    AzureRegion,
-    Region
+    | extend Subscription_g = replace_regex(Subscription_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend Subscription1_g = replace_regex(Subscription1_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend Subscription2_g = replace_regex(Subscription2_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend SubscriptionName_s = replace_regex(SubscriptionName_s, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend Type = replace_string(Type, 'AzureNetworkAnalytics_CL', 'NetFlow')
+    | project-rename Category = Type

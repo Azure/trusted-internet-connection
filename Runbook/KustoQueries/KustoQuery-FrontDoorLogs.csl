@@ -1,34 +1,10 @@
 AzureDiagnostics 
+| where TimeGenerated > ago(15m)
 | where ResourceType == 'FRONTDOORS'
     and (isnotempty(details_matches_s))
     and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
-| where TimeGenerated > ago(30m)
-| parse requestUri_s with Proto '://' TargetIP ':' TargetPort '/' Info
-| extend Protocol = tostring(requestProtocol_s), 
-    SourceIP = tostring(clientIp_s),
-    SourcePort = tostring(clientPort_s)
-| extend 
-    Action = 
-        iff(isempty(action_s),
-            tostring(httpStatusCode_s),
-            tostring(action_s)
-        ),
-    Protocol = 
-        iif(isnotempty(Proto), 
-            tostring(Proto), 
-            tostring(requestProtocol_s)
-        ),
-    SourceIP = 
-        iif(isnotempty(clientIP_s), 
-            tostring(clientIP_s), 
-            tostring(clientIp_s)
-        )
-| project 
-    Category,
-    TimeGenerated,
-    Protocol,
-    SourceIP,
-    SourcePort,
-    TargetIP,
-    TargetPort,
-    Action
+    | extend SubscriptionId = replace_regex(SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+    | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+    | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+    | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')

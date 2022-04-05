@@ -187,7 +187,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureAppGateway": "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -208,7 +208,7 @@
             "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
             "properties": {
                 "parameters": {
-                    "logAzureAppGateway" : "true"
+                    "logAzureAppGateway": "true"
                 },
                 "runbook": {
                     "name": "[variables('runbookName')]"
@@ -221,6 +221,48 @@
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
                 "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
                 "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-1'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
+            "properties": {
+                "parameters": {
+                    "logAzureAppGateway": "true"
+                },
+                "runbook": {
+                    "name": "[variables('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[concat(variables('scheduleName'), '-2')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-2'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts/jobSchedules",
+            "apiVersion": "2020-01-13-preview",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "properties": {
+                "parameters": {
+                    "logAzureAppGateway": "true"
+                },
+                "runbook": {
+                    "name": "[variables('runbookName')]"
+                },
+                "schedule": {
+                    "name": "[concat(variables('scheduleName'), '-3')]"
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]",
+                "[resourceId('Microsoft.Automation/automationAccounts/runbooks', variables('automationAccountName'), variables('runbookName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automationAccountName'), '/schedules/', concat(variables('scheduleName'), '-3'))]"
             ]
         },
         {

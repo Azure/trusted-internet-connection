@@ -1,2 +1,2 @@
 Syslog 
-    | where TimeGenerated > ago(30m)
+| where TimeGenerated > ago(15m)

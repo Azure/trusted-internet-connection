@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.13
+    1.14
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -115,7 +115,13 @@ function Get-LogAnalyticsData () {
         $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
     }
     catch {
-        Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+        
+        if ($logPurpose -eq "Azure AD Auth Logs"){
+            Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your Azure Active Directory Diagnostic Settings is enabled for ALL log types. New types were released and are expected. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+        }
+        else {
+            Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your the service's Diagnostic Settings is enabled for ALL log types. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+        }
         Exit 0
     }
     
@@ -230,97 +236,65 @@ catch {
 
 if ($logThirdpartyFirewall){
     $purpose = "Third-party Firewall Logs"
-    $query = "Syslog | where TimeGenerated > ago(30m)"
+    $query = "Syslog | where TimeGenerated > ago(15m)"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
         $collectedLogs = $true
     }
 }
 
 if ($logAzureADAuth){
     $purpose = "Azure AD Auth Logs"
-    $query = "SigninLogs 
-    | where TimeGenerated > ago(30m) 
-    | project 
-        Category,
-        TimeGenerated,
-        OperationName,
-        UserDisplayName,
-        Identity,
-        UserPrincipalName,
-        AppDisplayName,
-        AppId,
-        ResourceDisplayName,
-        AuthenticationDetails,
-        AuthenticationProcessingDetails,
-        ConditionalAccessPolicies,
-        DeviceDetail"
+    $query = "AuditLogs
+    | union SigninLogs
+    | union AADNonInteractiveUserSignInLogs
+    | union AADServicePrincipalSignInLogs
+    | union AADManagedIdentitySignInLogs
+    | union AADProvisioningLogs
+    | union ADFSSignInLogs
+    | union AADRiskyUsers
+    | union AADUserRiskEvents
+    | union AADRiskyServicePrincipals
+    | union AADServicePrincipalRiskEvents
+    | where TimeGenerated > ago(15m)
+        | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
         $collectedLogs = $true
     }
 }
 
 if ($logNetflow){
     $purpose = "Netflow Logs"
-    $query = "let Category = 'NetFlow';
-    AzureNetworkAnalytics_CL
+    $query = "AzureNetworkAnalytics_CL
+    | where TimeGenerated > ago(15m)
     | where SubType_s == 'FlowLog'
-        and (FASchemaVersion_s == '1' or FASchemaVersion_s == '2')
-    | where TimeGenerated > ago(30m) 
-    | extend VMFields  = split(VM1_s, '/')
-    | extend VMName  = tostring(VMFields[1]) 
-    | extend FlowType = tostring(FlowType_s), 
-        SourceIP = tostring(SrcIP_s),
-        TargetIP = tostring(DestIP_s),
-        TartgetPort = tostring(DestPort_d),
-        L4Protocol = tostring(L4Protocol_s),
-        L7Protocol = tostring(L7Protocol_s),
-        FlowDirection = tostring(FlowDirection_s),
-        AllowedOutFlows = tostring(AllowedOutFlows_d),
-        DeniedOutFlows = tostring(DeniedOutFlows_d),
-        OutboundBytes = tostring(OutboundBytes_d),
-        InboundBytes = tostring(InboundBytes_d),
-        OutboundPackets = tostring(OutboundPackets_d),
-        InboundPackets = tostring(InboundPackets_d),
-        AzureRegion = tostring(AzureRegion_s),
-        Region = tostring(Region1_s)
-    | project
-        Category,
-        TimeGenerated,
-        VMName,
-        FlowDirection,
-        FlowType,
-        SourceIP,
-        TargetIP,
-        TartgetPort,
-        L4Protocol,
-        L7Protocol,
-        AllowedOutFlows,
-        DeniedOutFlows,
-        OutboundBytes,
-        InboundBytes,
-        OutboundPackets,
-        InboundPackets,
-        AzureRegion,
-        Region"
+        | extend Subscription_g = replace_regex(Subscription_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend Subscription1_g = replace_regex(Subscription1_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend Subscription2_g = replace_regex(Subscription2_g, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend SubscriptionName_s = replace_regex(SubscriptionName_s, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend Type = replace_string(Type, 'AzureNetworkAnalytics_CL', 'NetFlow')
+        | project-rename Category = Type"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -328,46 +302,22 @@ if ($logNetflow){
 if ($logAzureFrontDoor){
     $purpose = "Azure Front Door Logs"
     $query = "AzureDiagnostics 
+    | where TimeGenerated > ago(15m)
     | where ResourceType == 'FRONTDOORS'
         and (isnotempty(details_matches_s))
         and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
-    | where TimeGenerated > ago(30m)
-    | parse requestUri_s with Proto '://' TargetIP ':' TargetPort '/' Info
-    | extend Protocol = tostring(requestProtocol_s), 
-        SourceIP = tostring(clientIp_s),
-        SourcePort = tostring(clientPort_s)
-    | extend 
-        Action = 
-            iff(isempty(action_s),
-                tostring(httpStatusCode_s),
-                tostring(action_s)
-            ),
-        Protocol = 
-            iif(isnotempty(Proto), 
-                tostring(Proto), 
-                tostring(requestProtocol_s)
-            ),
-        SourceIP = 
-            iif(isnotempty(clientIP_s), 
-                tostring(clientIP_s), 
-                tostring(clientIp_s)
-            )
-    | project 
-        Category,
-        TimeGenerated,
-        Protocol,
-        SourceIP,
-        SourcePort,
-        TargetIP,
-        TargetPort,
-        Action"
+        | extend SubscriptionId = replace_regex(SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -375,89 +325,22 @@ if ($logAzureFrontDoor){
 if ($logAzureAppGateway){
     $purpose = "Azure App Gateway Logs"
     $query = "AzureDiagnostics 
+    | where TimeGenerated > ago(15m)
     | where ResourceProvider == 'MICROSOFT.NETWORK'
         and (isnotempty(requestUri_s))
         and Category == 'ApplicationGatewayFirewallLog' or Category == 'ApplicationGatewayAccessLog'
-    | where TimeGenerated > ago(60m)
-    | parse hostname_s with TargetIP ':' Port
-    | parse serverRouted_s with InternalIP ':' Port2
-    | extend 
-        SourceIP = 
-            iif(isnotempty(clientIP_s), 
-                tostring(clientIP_s), 
-                tostring(clientIp_s)
-            ),
-        SourcePort = 
-            iif(isnotempty(clientPort_d), 
-                trim('.0', tostring(clientPort_d)), 
-                iif(isnotempty(Port), 
-                    tostring(Port), 
-                    iif(isnotempty(Port2), 
-                        tostring(Port2), 
-                        iif(isnotempty(sslEnabled_s), 
-                            '443', 
-                            '80'
-                        )
-                    )
-                )
-            ),
-        TargetPort = 
-            iif(isnotempty(Port), 
-                tostring(Port), 
-                iif(isnotempty(Port2), 
-                    tostring(Port2), 
-                    iif(isnotempty(sslEnabled_s), 
-                        '443', 
-                        '80'
-                    )
-                )
-            ),
-        TargetIP = 
-            iif(isnotempty(hostname_s), 
-                tostring(hostname_s),
-                iif(isnotempty(originalHost_s), 
-                    iif(tostring(originalHost_s) != '~.*' , 
-                        tostring(originalHost_s),
-                        tostring(Resource)
-                    ),
-                    tostring(Resource)
-                )
-            ),
-        Protocol = 
-            iif(isnotempty(httpVersion_s), 
-                tostring(httpVersion_s), 
-                iif(isnotempty(sslEnabled_s), 
-                    'HTTPS', 
-                    'HTTP'
-                )
-            ),
-        Action = 
-            iif(isnotempty(action_s), 
-                tostring(action_s), 
-                iif(isnotempty(WAFMode_s), 
-                    tostring(WAFMode_s), 
-                    iif(tostring(httpStatus_d) == '400' , 
-                            'Bad Request', 
-                            strcat('Http Status - ', replace_string(tostring(httpStatus_d), '.0',''))
-                    )
-                )
-            )
-    | project 
-    Category,
-    TimeGenerated,
-    SourceIP,
-    SourcePort,
-    TargetIP,
-    TargetPort,
-    Message,
-    Action"
+        | extend SubscriptionId = replace_regex(SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
         $collectedLogs = $true
     }
 }
@@ -465,60 +348,19 @@ if ($logAzureAppGateway){
 if (($logAzureFirewall) -or (!$collectedLogs)){
     $purpose = "Azure Firewall Logs"
     $query = "AzureDiagnostics 
+    | where TimeGenerated > ago(15m) 
     | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
-    | where TimeGenerated > ago(30m) 
-    | parse msg_s with Protocol1 ' request from ' SourceIP1 ':' SourcePortInt: int ' to ' TargetIP1 ':' TargetPortInt: int* 
-    | parse msg_s with *'. Action: ' Action1a | parse msg_s with *' was ' Action1b ' to ' NatDestination 
-    | parse msg_s with Protocol2 ' request from ' SourceIP2 ' to ' TargetIP2 '. Action: ' Action2 
-    | extend
-        SourceIP = 
-            iif(isnotempty(SourceIP1), 
-                tostring(SourceIP1), 
-                tostring(SourceIP2)
-            ),
-        SourcePort = 
-            iif(isnotempty(SourcePortInt), 
-                tostring(SourcePortInt),
-                'N/A'
-            ),
-        TargetPort = 
-            iif(isnotempty(TargetPortInt), 
-                 tostring(TargetPortInt),
-                'N/A'
-            ),
-        TargetIP = 
-            iif(isnotempty(TargetIP1), 
-                tostring(TargetIP1), 
-                tostring(TargetIP2)
-            ),
-        Protocol = 
-            iif(isnotempty(Protocol1), 
-                tostring(Protocol1), 
-                tostring(Protocol2)
-            ),
-        Action = 
-            iif(isnotempty(Action1a), 
-                replace_string(tostring(Action1a), '.',''), 
-                iif(isnotempty(Action1b), 
-                    tostring(Action1b),
-                    tostring(Action2)
-                )
-            )
-    | project 
-        Category,
-        TimeGenerated,
-        Protocol,
-        SourceIP,
-        SourcePort,
-        TargetIP,
-        TargetPort,
-        Action"
+        | extend SubscriptionId = replace_regex(SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend _SubscriptionId = replace_regex(_SubscriptionId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
+        | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
+        | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
     Get-LogAnalyticsData $purpose $query
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
     }
     else {
-        Write-Output "COMPLETE: There are no $purpose within the last 30 minutes to upload."
+        Write-Output "COMPLETE: There are no $purpose within the last 15 minutes to upload."
     }
 }
