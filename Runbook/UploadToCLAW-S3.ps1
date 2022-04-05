@@ -40,7 +40,7 @@
     
 .EXAMPLE  
     Runbook triggered by Azure Automation Account with Schedule that runs every 
-    60 minutees (1 hour) to send logs to CLAW in Amazon S3 bucket
+    15 minutees to send logs to CLAW in Amazon S3 bucket
 
         UploadToCLAW-S3.ps1
 
