@@ -77,6 +77,10 @@
         "logAnalyticsWorkspaceName": "[concat('Law-', variables('webAppUniqueName'))]",
         "automationAccountName": "[concat('AutoAcct-', variables('webAppUniqueName'), '-ToCLAW')]",
         "scheduleName": "UploadAzureFrontDoorLogs",
+        "jobName00": "00",
+        "jobName01": "01",
+        "jobName02": "02",
+        "jobName03": "03",
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
@@ -408,7 +412,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('jobName00')))]",
             "properties": {
                 "parameters": {},
                 "runbook": {
@@ -427,7 +431,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('jobName01')))]",
             "properties": {
                 "parameters": {},
                 "runbook": {
@@ -446,7 +450,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('jobName02')))]",
             "properties": {
                 "parameters": {},
                 "runbook": {
@@ -465,7 +469,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('jobName03')))]",
             "properties": {
                 "parameters": {},
                 "runbook": {
