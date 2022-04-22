@@ -475,7 +475,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')), '-0')]",
             "properties": {
                 "parameters": {
                     "logAzureAppGateway": "true"
@@ -496,7 +496,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')), '-1')]",
             "properties": {
                 "parameters": {
                     "logAzureAppGateway": "true"
@@ -517,7 +517,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')), '-2')]",
             "properties": {
                 "parameters": {
                     "logAzureAppGateway": "true"
@@ -538,7 +538,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/jobSchedules",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName'), variables('scheduleName')))]",
+            "name": "[concat(variables('automationAccountName'), '/', guid(variables('automationAccountName')), '-3')]",
             "properties": {
                 "parameters": {
                     "logAzureAppGateway": "true"
