@@ -90,7 +90,7 @@
         "scheduleCount": 5,
         "startTime": "[dateTimeAdd(parameters('baseTime'), 'PT1H')]",
         "runbookName": "[concat('Runbook-', variables('webAppUniqueName'), '-ToCLAW')]",
-        "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/UploadToCLAW-S3.ps1",
+        "runbookUri": "https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Runbook/CLAW-Aggregator.ps1",
         "diagSettingsName": "[concat('SendtoWorkspace-', variables('webAppUniqueName'))]",
         "actionGroupName": "FailureEmail",
         "tenantIdObject": {
@@ -475,7 +475,7 @@
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
             "properties": {
-                "description": "Every hour initiate the UploadToCLAW-S3 runbook.",
+                "description": "Every hour initiate the CLAW-Aggregator runbook.",
                 "startTime": "[dateTimeAdd(variables('startTime'), concat('PT', mul(copyIndex(), 15) ,'M'))]",
                 "interval": 1,
                 "frequency": "Hour",
@@ -590,7 +590,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/AWSAccessKey')]",
+            "name": "[concat(variables('automationAccountName'), '/AccessKey')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
@@ -602,7 +602,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/AWSSecretKey')]",
+            "name": "[concat(variables('automationAccountName'), '/SecretKey')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
@@ -614,7 +614,7 @@
         {
             "type": "Microsoft.Automation/automationAccounts/variables",
             "apiVersion": "2020-01-13-preview",
-            "name": "[concat(variables('automationAccountName'), '/S3BucketName')]",
+            "name": "[concat(variables('automationAccountName'), '/BucketName')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Automation/automationAccounts', variables('automationAccountName'))]"
             ],
