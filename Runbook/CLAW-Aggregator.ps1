@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.14
+    1.15
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -39,10 +39,9 @@
     https://github.com/Azure/trusted-internet-connection
     
 .EXAMPLE  
-    Runbook triggered by Azure Automation Account with Schedule that runs every 
-    15 minutees to send logs to CLAW in Amazon S3 bucket
+    Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
 
-        UploadToCLAW-S3.ps1
+        CLAW-Aggregator.ps1
 
 .PRIVATEDATA
 
@@ -51,7 +50,7 @@
 <# 
 
 .DESCRIPTION 
- Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
+ Version 1.15, Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
 
 #> 
 
@@ -106,31 +105,57 @@ function Get-LogAnalyticsData () {
         [Parameter(Mandatory=$true)]
         $logPurpose,
         [Parameter(Mandatory=$true)]
-        $logQuery
+        $logQuery,
+        [Parameter(Mandatory=$true)]
+        $logTable
     
         )
 
+    $Global:jsonResults = ""
+
     try {
-        Write-Output "Querying Log Analytics Workspace for $logPurpose." 
+        $tableExists = $false
+        Write-Output "Validating table for $logPurpose exists."
+        $logQuery = "search * | distinct Type | sort by Type asc"
         $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
+        foreach ($result in $results.Results.Type) {
+            switch ($result) {
+                $logTable { $tableExists = $true }
+                Default {}
+            }
+        }
     }
     catch {
-        
-        if ($logPurpose -eq "Azure AD Auth Logs"){
-            Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your Azure Active Directory Diagnostic Settings is enabled for ALL log types. New types were released and are expected. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
-        }
-        else {
-            Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your the service's Diagnostic Settings is enabled for ALL log types. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
-        }
+        Write-Error "Failed to query the Log Analytics Workspace. Double-check if your Log Analytics Workspace exists. If you recently deployed the Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace. This is a fatal error and will exit the script."
         Exit 0
     }
-    
-    try {
-        Write-Output "Converting query results to JSON."
-        $Global:jsonResults = $results.Results | convertto-json
+
+    if ($tableExists){
+        try {
+            Write-Output "Querying Log Analytics Workspace for $logPurpose." 
+            $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
+        }
+        catch {
+            
+            if ($logPurpose -eq "Azure AD Auth Logs"){
+                Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your Azure Active Directory Diagnostic Settings is enabled for ALL log types. New types were released and are expected. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+            }
+            else {
+                Write-Error "Failed to query the Log Analytics Workspace for $logPurpose. Double-check if your the service's Diagnostic Settings is enabled for ALL log types. If, within last 90 minutes, you deployed this runbook to a newly configured firewall and Log Analytics workspace, please wait up to 90 minutes. If you still have errors, ensure Managed Identity has Reader access to the Log Analytics workspace, the Azure Firewall is sending diagnostic logs to the Log Analytics workspace, or verify the the Az.OperationalInsights module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+            }
+            Exit
+        }
+        
+        try {
+            Write-Output "Converting query results to JSON."
+            $Global:jsonResults = $results.Results | convertto-json
+        }
+        catch {
+            Write-Error "Failed to convert results to JSON. Sending logs in object format."
+        }
     }
-    catch {
-        Write-Error "Failed to convert results to JSON. Sending logs in object format."
+    else {
+        Write-Output "Table named $logTable doesn't exist." 
     }
 }
 
@@ -147,16 +172,16 @@ function Send-LogsToCLAW () {
         $key = ($logPurpose.replace(" ","")) + (get-date -Format u).replace("-","").replace(" ","").replace(":","").replace("Z","").toString() + (".json")
     }
     catch {
-        Write-Error "Failed to generate key. The key is the file in which the stream of JSON data is stored in the S3 bucket. Please rerun the script. If the error continues, manually create a unique key name until issue is resolved. This is a fatal error and will exit the script."
+        Write-Error "Failed to generate key. The key is the file in which the stream of JSON data is stored. Please rerun the script. If the error continues, manually create a unique key name until issue is resolved. This is a fatal error and will exit the script."
         Exit 0
     }
     
     try {
-        Write-Output "Streaming/Uploading the results to the S3 bucket."
-        Write-S3Object -BucketName $S3BucketName -stream $Global:jsonResults -key $key
+        Write-Output "Uploading the results to the CLAW."
+        Write-S3Object -BucketName $BucketName -stream $Global:jsonResults -key $key
     }
     catch {
-        Write-Error "Failed to complete the stream/upload of the results, please manually run the Runbook again or wait until the next scheduled task to run the Runbook. If the problem continues verify the S3BucketName exists and is correct, trouble connectivity to the S3 bucket manually, or contact cloud administrator. This is a fatal error and will exit the script."
+        Write-Error "Failed to complete the upload of the results, please manually run the Runbook again or wait until the next scheduled task to run the Runbook. If the problem continues, coordinate with CISA on your access to the CLAW. This is a fatal error and will exit the script."
         Exit 0
     }
     
@@ -180,31 +205,31 @@ catch {
 }
 
 try {
-    $AWSAccessKey = Get-AutomationVariable -Name AWSAccessKey
+    $AccessKey = Get-AutomationVariable -Name AccessKey
 }
 catch {
-    Write-Error "Failed to collect AWSAccessKey, please verify variable exists in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect AccessKey, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
-    $AWSSecretKey = Get-AutomationVariable -Name AWSSecretKey
+    $SecretKey = Get-AutomationVariable -Name SecretKey
 }
 catch {
-    Write-Error "Failed to collect AWSSecretKey, please verify variable exists in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect SecretKey, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
-    $S3BucketName = Get-AutomationVariable -Name S3BucketName
+    $BucketName = Get-AutomationVariable -Name BucketName
 }
 catch {
-    Write-Error "Failed to collect S3BucketName, please verify variable exists in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect BucketName, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
-    $AWSRegion = Get-AutomationVariable -Name AWSRegion
+    $Region = Get-AutomationVariable -Name Region
 }
 catch {
-    Write-Error "Failed to collect S3BucketName, please verify variable exists in the same Automation Account in which this script was run."
+    Write-Error "Failed to collect Region, please verify variable exists in the same Automation Account in which this script was run."
 }
 
 try {
@@ -217,27 +242,28 @@ catch {
 }
 
 try {
-    Write-Output ("Setting AWS Region to" + $AWSRegion)
-    Set-DefaultAWSRegion -Region $AWSRegion | out-null
+    Write-Output ("Setting Region to" + $Region)
+    Set-DefaultAWSRegion -Region $Region | out-null
 }
 catch {
-    Write-Error "Failed to set AWS Region. Please verify there is a value in the varible AWSRegion and that it is the correct region. This is a fatal error and will exit the script."
+    Write-Error "Failed to set Region. Please verify there is a value in the varible Region and that it is the correct region. This is a fatal error and will exit the script."
     Exit 0
 }
 
 try {
-    Write-Output "Connecting to AWS Account."
-    Set-AWSCredential -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey -StoreAs default
+    Write-Output "Connecting to CLAW."
+    Set-AWSCredential -AccessKey $AccessKey -SecretKey $SecretKey -StoreAs default
 }
 catch {
-    Write-Error "Failed to connect to AWS account. Verify the AccessKey and AccessSecret are valid and make sure the AWSPowerShell module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
+    Write-Error "Failed to connect to CLAW. Verify the AccessKey and AccessSecret are valid and make sure the AWSPowerShell module is installed in the Automation Account Module section. This is a fatal error and will exit the script."
     Exit 0
 }
 
 if ($logThirdpartyFirewall){
     $purpose = "Third-party Firewall Logs"
+    $logAnalyticsTable = "Syslog"
     $query = "Syslog | where TimeGenerated > ago(15m)"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
@@ -250,6 +276,7 @@ if ($logThirdpartyFirewall){
 
 if ($logAzureADAuth){
     $purpose = "Azure AD Auth Logs"
+    $logAnalyticsTable = "AuditLogs"
     $query = "AuditLogs
     | union SigninLogs
     | union AADNonInteractiveUserSignInLogs
@@ -264,7 +291,7 @@ if ($logAzureADAuth){
     | where TimeGenerated > ago(15m)
         | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
@@ -277,6 +304,7 @@ if ($logAzureADAuth){
 
 if ($logNetflow){
     $purpose = "Netflow Logs"
+    $logAnalyticsTable = "AzureNetworkAnalytics_CL"
     $query = "AzureNetworkAnalytics_CL
     | where TimeGenerated > ago(15m)
     | where SubType_s == 'FlowLog'
@@ -288,7 +316,7 @@ if ($logNetflow){
         | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?$', 'REDACTED')
         | extend Type = replace_string(Type, 'AzureNetworkAnalytics_CL', 'NetFlow')
         | project-rename Category = Type"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
@@ -301,7 +329,8 @@ if ($logNetflow){
 
 if ($logAzureFrontDoor){
     $purpose = "Azure Front Door Logs"
-    $query = "AzureDiagnostics 
+    $logAnalyticsTable = "AzureDiagnostics"
+    $query = "AzureDiagnostics
     | where TimeGenerated > ago(15m)
     | where ResourceType == 'FRONTDOORS'
         and (isnotempty(details_matches_s))
@@ -311,7 +340,7 @@ if ($logAzureFrontDoor){
         | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
@@ -324,7 +353,8 @@ if ($logAzureFrontDoor){
 
 if ($logAzureAppGateway){
     $purpose = "Azure App Gateway Logs"
-    $query = "AzureDiagnostics 
+    $logAnalyticsTable = "AzureDiagnostics"
+    $query = "AzureDiagnostics
     | where TimeGenerated > ago(15m)
     | where ResourceProvider == 'MICROSOFT.NETWORK'
         and (isnotempty(requestUri_s))
@@ -334,7 +364,7 @@ if ($logAzureAppGateway){
         | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true
@@ -347,6 +377,7 @@ if ($logAzureAppGateway){
 
 if (($logAzureFirewall) -or (!$collectedLogs)){
     $purpose = "Azure Firewall Logs"
+    $logAnalyticsTable = "AzureDiagnostics"
     $query = "AzureDiagnostics 
     | where TimeGenerated > ago(15m) 
     | where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule' 
@@ -355,7 +386,7 @@ if (($logAzureFirewall) -or (!$collectedLogs)){
         | extend ResourceId = replace_regex(ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend _ResourceId = replace_regex(_ResourceId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')
         | extend TenantId = replace_regex(TenantId, @'([0-9A-Fa-f]{4}[-]?){3}[0-9A-Fa-f]{12}[)}]?', 'REDACTED')"
-    Get-LogAnalyticsData $purpose $query
+    Get-LogAnalyticsData $purpose $query $logAnalyticsTable
     If($Global:jsonResults){
         Send-LogsToCLAW $purpose
         $collectedLogs = $true

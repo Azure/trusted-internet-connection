@@ -20,6 +20,19 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
 ### Architecture
 **Azure Active Directory**
 - Deploy an automated service to deliver Azure Active Directory logs to CISA CLAW. This supports the TIC 3.0 compliance for authentication and sign-in logs.
+  - AuditLogs
+  - SignInLogs
+  - AADNonInteractiveUserSignInLogs
+  - AADServicePrincipalSignInLogs
+  - ManagedIdentitySignInLogs
+  - ProvisioningLogs
+  - ADFSSignInLogs
+  - RiskyUsers
+  - UserRiskEvents
+  - NetworkAccessTrafficLogs
+  - RiskyServicePrincipals
+  - ServicePrincipalRiskEvents
+
 
 **Azure Application Gateway**
 - Deploy a suite of services that leverage Azure Application Gateway, regional load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
