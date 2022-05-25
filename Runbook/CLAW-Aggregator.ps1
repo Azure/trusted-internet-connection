@@ -1,7 +1,7 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.15
+    1.16
 
 .GUID 
     41e92ce1-3a88-49e0-9495-85fc261bf7ec
@@ -37,6 +37,9 @@
 
 .LINK  
     https://github.com/Azure/trusted-internet-connection
+
+.LINK  
+    https://github.com/microsoft/Federal-App-Innovation-Community
     
 .EXAMPLE  
     Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
@@ -50,7 +53,7 @@
 <# 
 
 .DESCRIPTION 
- Version 1.15, Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
+ Version 1.16, Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
 
 #> 
 
