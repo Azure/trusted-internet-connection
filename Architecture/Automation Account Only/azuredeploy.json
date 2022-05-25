@@ -10,7 +10,7 @@
             }
         },
         "logAnalyticsWorkspaceId": {
-            "defaultValue": "4bc6d927-9e5c-4004-9df1-dd6da84e599b",
+            "defaultValue": "TheWorkspaceIdOfYourLogAnalyticsWorkspace",
             "type": "String",
             "metadata": {
                 "description": "This is the Log Analytics Workspace that you are using to collect logs. This is where you must send ALL logs that you want delivered to CISA CLAW."
