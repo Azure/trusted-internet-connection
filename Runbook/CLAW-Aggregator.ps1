@@ -119,8 +119,8 @@ function Get-LogAnalyticsData () {
     try {
         $tableExists = $false
         Write-Output "Validating table for $logPurpose exists."
-        $logQuery = "search * | distinct Type | sort by Type asc"
-        $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQuery
+        $logQueryType = "search * | distinct Type | sort by Type asc"
+        $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $LogAnalyticWorkspaceID -Query $logQueryType
         foreach ($result in $results.Results.Type) {
             switch ($result) {
                 $logTable { $tableExists = $true }
