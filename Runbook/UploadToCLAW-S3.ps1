@@ -191,6 +191,10 @@ function Send-LogsToCLAW () {
     Write-Output "SUCCESS: Upload of $logPurpose to CLAW complete."
 }
 
+<#***************************************************
+                       Execution
+***************************************************#>
+
 Write-Output "Collecting variables from Automation Account."
 
 try {

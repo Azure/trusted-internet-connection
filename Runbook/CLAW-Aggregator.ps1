@@ -1,10 +1,10 @@
 <#PSScriptInfo
 
 .VERSION 
-    1.17
+    1.18
 
 .GUID 
-    41e92ce1-3a88-49e0-9495-85fc261bf7ec
+    4823a04c-83ca-4377-9c77-4bc97496e724
 
 .AUTHOR 
     Paul Lizer, paullizer@microsoft.com
@@ -53,7 +53,7 @@
 <# 
 
 .DESCRIPTION 
- Version 1.16, Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
+ Using an Azure Automation Account Runbook, upload logs to CISA managed CLAW. 
 
 #> 
 
@@ -190,6 +190,10 @@ function Send-LogsToCLAW () {
     
     Write-Output "SUCCESS: Upload of $logPurpose to CLAW complete."
 }
+
+<#***************************************************
+                       Execution
+***************************************************#>
 
 Write-Output "Collecting variables from Automation Account."
 
