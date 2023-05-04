@@ -1,2 +1,0 @@
-Syslog 
-| where TimeGenerated > ago(15m)

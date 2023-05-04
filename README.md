@@ -10,12 +10,10 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
   - Third-party Firewall
   - Azure Front Door
   - Azure Application Gateway
+  - Event Hub
+  - Service Principle (Registered Application)
   - Post Deployment Tasks
   - Visio
-- Runbook
-  - Kusto Queries
-  - UploadToCLAW-S3.ps1
-  - UploadToCLAW-AzSA.ps1
 
 ### Architecture
 **Azure Active Directory**
@@ -46,7 +44,16 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
 - Deploy a suite of services that leverage Azure Front Door, global load balancer with a Web Application Firewall, to provide direct access to an Azure-based application. 
 - Meet TIC 3.0 telemetry compliance with the automated service to deliver application connection logs and layer 7 firewall logs to CISA CLAW. 
 
+**Event Hub**
+
+- WORDS
+
+**Service Principle**
+
+- WORDS
+
 **Images**
+
 - Contains images used throughout the articles in this repo.
 
 **NetFlow Logs**
@@ -64,14 +71,6 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
 
 **Visio**
 - Architecture for all scenarios and solutions in Visio document.
-
-### Runbook
-**UploadToCLAW-S3.ps1**
-- This is the primary runbook as CLAW is currently using S3 as their storage solution. 
-- Runbook is automatically deployed and published as part of each azuredeploy.json found across the different scenarios. 
-
-**Kusto Queries**
-- List of queries that are used to collect the data from a Log Analytics workspace.
 
 ## Deployment Instructions
 ### Azure Firewall vs. Front Door vs. Application Gateway
@@ -105,6 +104,7 @@ The runbook uses encrypted Automation account variables to simplify initial conf
 
 ### Alerting
 An Azure alert is deployed and configured to send an failure email notification, to the email(s) defined at deployment. The notification informs the organization when the runbook fails. Administrators can review the runbook history for more details on why the runbook failed.
+
 
 ## Related Resources
 - [Firewall, App Gateway for virtual networks - Azure Example Scenarios | Microsoft Docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/gateway/firewall-application-gateway)
