@@ -1,5 +1,7 @@
 # TIC 3.0 Compliant Demo using Azure Front Door
 
+This repo supports an article on the Azure Architecture Center (AAC) - [Trusted Internet Connection (TIC) 3.0 compliance - Azure Example Scenarios | Microsoft Docs](https://docs.microsoft.com/en-us/azure/architecture/example-scenario/security/trusted-internet-connections), it contains lots of great information on using the content of this repo. Please visit the article in the AAC before proceeding.
+
 The following solution integrates an Azure Front Door with Web Application Firewall (WAF) to manage the traffic into your Azure application environment. The solution includes all resources to generate, collect, and deliver logs to the CLAW. It also includes an app service to highlight the types of telemetry collected by the firewall.
 
 ![TIC 3.0 compliance using Azure Firewall and Application Service](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/trusted-internet-connections-architecture-AzFrDrWAF.png)
@@ -22,9 +24,9 @@ The following must be performed before using this deployment scenario:
   - An Event Hub
   - An alert rule that sends an email if a job fails.
 
-[![Deploy to Azure](C:\Users\paull\OneDrive\Pictures\Typora\README\trusted-internet-connection-deploy-to-azure-1683288464557-1.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Front-Door%2FComplete%2Fazuredeploy.json)
+[![Deploy to Azure](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/trusted-internet-connection-deploy-to-azure.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Front-Door%2FComplete%2Fazuredeploy.json)
 
-[![Deploy to Azure Gov](C:\Users\paull\OneDrive\Pictures\Typora\README\trusted-internet-connection-deploy-to-azure-gov-1683288464557-2.png)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Front-Door%2FComplete%2Fazuredeploy.json)
+[![Deploy to Azure Gov](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/trusted-internet-connection-deploy-to-azure-gov.png)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Front-Door%2FComplete%2Fazuredeploy.json)
 
 ### Post-deployment tasks for all solutions
 
@@ -36,3 +38,4 @@ The following tasks must be performed after deployment is complete. They are man
 - Create a Service Principle (App Registration).
 - Add the CISA-provided certificate to the App Registration.
 - Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace.
+- Activate Feed by sharing Azure Tenant ID, Application (client) ID, Event Hub Namespace name, Event Hub name, and Consumer group name with your CISA POC
