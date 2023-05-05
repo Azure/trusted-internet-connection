@@ -32,3 +32,4 @@ The following tasks must be performed after deployment is complete. They are man
 - Create a Service Principle (App Registration).
 - Add the CISA-provided certificate to the App Registration.
 - Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace.
+- Activate Feed by sharing Azure Tenant ID, Application (client) ID, Event Hub Namespace name, Event Hub name, and Consumer group name with your CISA POC

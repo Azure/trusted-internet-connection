@@ -1,19 +1,18 @@
-# TIC 3.0 Deployment Scenario for Third-party Firewalls, aka Network Virtual Appliance (NVA)
-## Automation account only (most common deployment scenario)
-### Requirements
-The following must be performed before using this deployment scenario:
-- Deployed Third-party firewall
-- Deployed syslog forwarding server (usually running a Linux-based OS)
-- Third-party firewall configured to send logs in syslog format to syslog forwarding server
-- Log Analytics agent installed on syslog forwarding server
-- Log Analytics agent configured to send syslogs to Log Analytics workspace
+# TIC 3.0 Compliant Guidance using Third-party Firewall aka Network Virtual Appliance
+> [!NOTE]
+> This solution does not have a Deploy to Azure capability and is meant for guidance only.
 
-### Deploys and Updates
-This deployment scenario will deploy and update the following:
-- Deploy Automation Account
-- Assign Automation Account's Managed Identity with Log Analytics Reader role to Log Analytics workspace
-- Deploy Alert
+The following solution defines how a Third-party firewall can be used to manage the traffic into your Azure application environment and support TIC 3.0 compliance. Third-party firewalls require use of a Syslog forwarder virtual machine, usually Linux-based, with its agents registered with the Log Analytics workspace. The Third-party firewall is configured to export its logs in syslog format to the Syslog forwarder virtual machine and the agent is configured to send its logs to the Log Analytics workspace. Once the logs are in the Log Analytics workspace they are sent to the Event hub and processed like the other solutions outlined in this article.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FThird-party%2520Firewall%2FAutomation%2520Account%2520Only%2Fazuredeploy.json)
+![TIC 3.0 compliance using Azure Firewall and Application Service](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/trusted-internet-connections-architecture-NVA.png)
 
-![Automation account Only](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/149368956-072ca735-1bb3-4a5a-b429-40f6715f45ae.png)
+### Post-deployment tasks for all solutions
+
+Up to now your environment is performing the firewall capabilities and logging connections. To be TIC 3.0 compliant for Network Telemetry collection, those logs must make it to CISA CLAW. The post-deployment steps finish the tasks towards compliance. These steps require coordination with CISA because you will need a certificate from CISA to associate with your Service Principle. For step-by-step details see [Post Deployment Tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post Deployment Tasks).
+
+The following tasks must be performed after deployment is complete. They are manual tasks—an ARM template can't do them.
+
+- Obtain a public key certificate from CISA. 
+- Create a Service Principle (App Registration).
+- Add the CISA-provided certificate to the App Registration.
+- Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace.

@@ -12,16 +12,16 @@ The following must be performed before using this deployment scenario:
 
 ### Deploys and Updates
 
-- -  The solution includes:
+-  The solution includes:
 
-    - A virtual network with a subnet for the firewall and servers.
-    - A Log Analytics workspace.
-    - Azure Firewall with a network policy for internet access.
-    - Azure Firewall diagnostic settings that send logs to the Log Analytics workspace.
-    - A route table associated with AppSubnet to route the app service to the firewall for the logs it generates.
-    - A registered application
-    - An Event Hub
-    - An alert rule that sends an email if a job fails.
+  - A virtual network with a subnet for the firewall and servers.
+  - A Log Analytics workspace.
+  - Azure Firewall with a network policy for internet access.
+  - Azure Firewall diagnostic settings that send logs to the Log Analytics workspace.
+  - A route table associated with AppSubnet to route the app service to the firewall for the logs it generates.
+  - A registered application
+  - An Event Hub
+  - An alert rule that sends an email if a job fails.
 
 [![Deploy to Azure](C:\Users\paull\OneDrive\Pictures\Typora\README\trusted-internet-connection-deploy-to-azure-1683287986527-5.svg)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Firewall%2FComplete%2Fazuredeploy.json)
 
