@@ -1,7 +1,7 @@
-# TIC 3.0 Deployment Scenarios for Azure Application Gateway
+# TIC 3.0 Compliant Demo using Azure Application Gateway
 The following solution integrates an Application Gateway with Web Application Firewall (WAF) to manage the traffic into your Azure application environment. The solution includes all resources to generate, collect, and deliver logs to the CLAW. It also includes an app service to highlight the types of telemetry collected by the firewall.
 
-
+![TIC 3.0 compliance using Application Gateway with Web Application Firewall and Application Service Environment v3](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/trusted-internet-connections-architecture-AppGwWAF.png)
 
 ### Requirements
 The following must be performed before using this deployment scenario:
@@ -22,4 +22,13 @@ The following must be performed before using this deployment scenario:
 
 [![Deploy to Azure Gov](C:\Users\paull\OneDrive\Pictures\Typora\README\trusted-internet-connection-deploy-to-azure-gov-1683287548353-6.png)](https://portal.azure.us/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Ftrusted-internet-connection%2Fmain%2FArchitecture%2FAzure-Application-Gateway%2FComplete%2Fazuredeploy.json)
 
-![trusted-internet-connections-architecture-AppGwWAF](./Images/trusted-internet-connections-architecture-AppGwWAF.png)
+### Post-deployment tasks for all solutions
+
+Up to now your environment is performing the firewall capabilities and logging connections. To be TIC 3.0 compliant for Network Telemetry collection, those logs must make it to CISA CLAW. The post-deployment steps finish the tasks towards compliance. These steps require coordination with CISA because you will need a certificate from CISA to associate with your Service Principle. For step-by-step details see [Post Deployment Tasks](https://github.com/Azure/trusted-internet-connection/tree/main/Architecture/Post Deployment Tasks).
+
+The following tasks must be performed after deployment is complete. They are manual tasks—an ARM template can't do them.
+
+- Obtain a public key certificate from CISA. 
+- Create a Service Principle (App Registration).
+- Add the CISA-provided certificate to the App Registration.
+- Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace.
