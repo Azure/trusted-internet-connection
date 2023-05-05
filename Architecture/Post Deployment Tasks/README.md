@@ -21,47 +21,47 @@ Contact your organizations CISA POC to begin TIC 3.0 compliance.
 
 [Create an Azure AD app and service principal in the portal - Microsoft Entra | Microsoft Learn](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
 
-![image-20230505081406197](C:\Users\paull\OneDrive\Pictures\Typora\README\CreateSP-001.png)
+![Create a Service Principle (App Registration)](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-001.png)
 
 1. Select App registrations
 2. Select + New registration
 
-![image-20230505081723070](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505081723070.png)
+![Create a Service Principle (App Registration)](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-002.png)
 
 3. Provide name for the application, this demo uses TalonReader
 4. Select Register
 
 ### Add the CISA-provided certificate to the App Registration
 
-![image-20230505082019913](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505082019913.png)
+![Add the CISA-provided certificate to the App Registration](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-003.png)
 
 1. Select Certificates & secrets
 2. Select Certificates
 3. Select Upload certificate
 
-![image-20230505082232343](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505082232343.png)
+![Add the CISA-provided certificate to the App Registration](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-004.png)
 
 4. Select the Browse folder button, use file explorer to find the certificate, and select it
 5. Select Add, you will see a status in the upper right of the browser showing when the upload is complete. 
 
-![image-20230505082357990](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505082357990.png)
+![Add the CISA-provided certificate to the App Registration](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-005.png)
 
 ### Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace
 
-![image-20230505082712131](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505082712131.png)
+![Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-006.png)
 
 1. Navigate to your Event Hub Namespace used for TIC 3.0 TALON access.
 2. Select Access control (IAM)
 3. Select + Add
 4. Select Add role assignment
 
-![image-20230505082940366](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505082940366.png)
+![Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-007.png)
 
 5. Search for Azure Event Hubs Data Receiver
 6. Select Azure Event Hubs Data Receiver
 7. Select Next
 
-![image-20230505083150288](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505083150288.png)
+![Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-008.png)
 
 8. Select User, group, or service principal
 9. Select + Select members
@@ -69,7 +69,7 @@ Contact your organizations CISA POC to begin TIC 3.0 compliance.
 11. Select TalonReader
 12. Select Select
 
-![image-20230505083358905](C:\Users\paull\OneDrive\Pictures\Typora\README\image-20230505083358905.png)
+![Assign the application with the Azure Event Hubs Data Receiver role to the Event Hub Namespace](https://raw.githubusercontent.com/Azure/trusted-internet-connection/main/Architecture/Images/CreateSP-009.png)
 
 13. Select Review + assign, twice
 
