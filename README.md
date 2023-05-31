@@ -71,9 +71,62 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
 - Meet TIC 3.0 telemetry compliance with the automated service to deliver connection logs and layer 4 firewall logs to CISA CLAW.
 
 **Visio**
+
 - Architecture for all scenarios and solutions in Visio document.
 
+## Logging Details
+
+The following Kusto queries can be run against the Log Analytics workspace to review the type of logs collected by CISA and to leverage for your organizations security requirements.
+
+App Gateway
+```
+AzureDiagnostics 
+| where TimeGenerated > ago(15m)
+| where ResourceProvider == 'MICROSOFT.NETWORK'
+    and (isnotempty(requestUri_s))
+    and Category == 'ApplicationGatewayFirewallLog' or Category == 'ApplicationGatewayAccessLog'
+```
+
+Azure Firewall
+```
+AzureDiagnostics 
+| where TimeGenerated > ago(15m) 
+| where Category == 'AzureFirewallNetworkRule' or Category == 'AzureFirewallApplicationRule'
+```
+
+Azure Front Door
+```
+AzureDiagnostics 
+| where TimeGenerated > ago(15m)
+| where ResourceType == 'FRONTDOORS'
+    and (isnotempty(details_matches_s))
+    and Category == 'FrontdoorWebApplicationFirewallLog' or Category == 'FrontdoorAccessLog'
+```
+
+Third-party Firewall (aka NVA)
+```
+Syslog 
+| where TimeGenerated > ago(15m)
+```
+
+Azure AD
+```
+AuditLogs
+| union SigninLogs
+| union AADNonInteractiveUserSignInLogs
+| union AADServicePrincipalSignInLogs
+| union AADManagedIdentitySignInLogs
+| union AADProvisioningLogs
+| union ADFSSignInLogs
+| union AADRiskyUsers
+| union AADUserRiskEvents
+| union AADRiskyServicePrincipals
+| union AADServicePrincipalRiskEvents
+| where TimeGenerated > ago(15m)
+```
+
 ## Deployment Instructions
+
 ### Azure Firewall vs. Front Door vs. Application Gateway
 Azure Firewall functions as a router and a firewall with more policies
 
