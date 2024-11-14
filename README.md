@@ -10,7 +10,7 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
   - Azure Front Door
   - Azure Application Gateway
   - Event Hub
-  - Service Principle (Registered Application)
+  - Service Principal (Registered Application)
   - Post Deployment Tasks
   - Visio
 
@@ -48,9 +48,9 @@ This repo supports an article on the Azure Architecture Center (AAC) - [Trusted 
 
 - Event Hub Standard is a modern big data streaming platform and event ingestion service.
 
-**Service Principle**
+**Service Principal**
 
-- Service Principle (Registered Application) is an entity that defines the access policy and permissions for the user/application in the Azure AD tenant.
+- Service Principal (Registered Application) is an entity that defines the access policy and permissions for the user/application in the Azure AD tenant.
 
 **Images**
 
